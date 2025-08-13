@@ -1,4 +1,4 @@
-import { bufferToFloat, floatToBuffer, bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, bufferToInt2, intToBuffer1, intToBuffer2 } from './HEX.js';
+import { intToBuffer1 } from './HEX.js';
 
 // 发送包生成
 
