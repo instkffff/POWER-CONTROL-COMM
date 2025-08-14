@@ -184,7 +184,15 @@ function parseReadKWHResponse(packet) {
         initialKWH: kwhFields[4].value,
         usedKWH: kwhFields[5].value,
         totalKWH: kwhFields[6].value,
-        rawData: kwhFields[0].buffer,
+        rawData: {
+            unknown1Buffer: kwhFields[0].buffer,
+            unknown2Buffer: kwhFields[1].buffer,
+            unknown3Buffer: kwhFields[2].buffer,
+            rechargeKWHBuffer: kwhFields[3].buffer,
+            initialKWHBuffer: kwhFields[4].buffer,
+            usedKWHBuffer: kwhFields[5].buffer,
+            totalKWHBuffer: kwhFields[6].buffer
+        },
         isValid: functionCode === "82"
     };
 }
@@ -217,12 +225,4 @@ console.log('读取电量响应包:', readKWHResponse);
 // 解析读取电量响应包
 const responsePacket = Buffer.from('821c000000000000000000000000000000000000c842000000000000c842', 'hex');
 const parsedResponse = parseReadKWHResponse(responsePacket);
-console.log('解析响应:', {
-    functionCode: parsedResponse.functionCode,
-    length: parsedResponse.length,
-    initialKWH: parsedResponse.initialKWH,
-    usedKWH: parsedResponse.usedKWH,
-    totalKWH: parsedResponse.totalKWH,
-    isValid: parsedResponse.isValid
-});
- */
+console.log('解析响应:', parsedResponse); */
