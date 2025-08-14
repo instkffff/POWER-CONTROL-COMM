@@ -1,3 +1,4 @@
+// packet/unifiedPacket.js
 import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1, bufferToFloat, floatToBuffer } from './HEX.js';
 
 /* 
@@ -33,15 +34,7 @@ data 55
  * @param {number} data.totalKWH - 总电量 (KWh = float / 10)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateChargingPacket(functionCode = 12, data = {
-    unknown1: 0.0,
-    unknown2: 0.0,
-    unknown3: 0.0,
-    rechargeKWH: 0.0,
-    initialKWH: 100.0,
-    usedKWH: 0.0,
-    totalKWH: 100.0
-}) {
+function generateChargingPacket(functionCode = 12, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
@@ -53,16 +46,24 @@ function generateChargingPacket(functionCode = 12, data = {
         'initialKWH', 'usedKWH', 'totalKWH'
     ];
     
+    // 默认值
+    const defaultData = {
+        unknown1: 0.0,
+        unknown2: 0.0,
+        unknown3: 0.0,
+        rechargeKWH: 0.0,
+        initialKWH: 100.0,
+        usedKWH: 0.0,
+        totalKWH: 100.0
+    };
+    
+    // 合并传入数据和默认值
+    const mergedData = { ...defaultData, ...data };
+    
     for (const field of kwhFields) {
-        let kwhBuffer;
-        if (typeof data[field] === 'number') {
-            // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualKWH = data[field] * 10;
-            kwhBuffer = floatToBuffer(actualKWH);
-        } else {
-            // 如果已经是buffer
-            kwhBuffer = data[field];
-        }
+        // 转换为实际浮点数值并转为buffer
+        const actualKWH = mergedData[field] * 10;
+        const kwhBuffer = floatToBuffer(actualKWH);
         kwhBuffers.push(kwhBuffer);
     }
     
@@ -152,20 +153,13 @@ function parseChargingPacket(packet) {
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateChargingResponse(functionCode = 92, data = { hex: "55" }) {
+function generateChargingResponse(functionCode = 92, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
-    if (data.hex) {
-        // 十六进制字符串形式
-        dataBuffer = Buffer.from(data.hex, 'hex');
-    } else {
-        // 默认成功响应
-        dataBuffer = Buffer.from([0x55]);
-    }
+    // 处理数据部分 - 只处理hex格式数据
+    const dataBuffer = Buffer.from(data.hex, 'hex')
     
     // 计算长度（字节数）
     const length = dataBuffer.length;

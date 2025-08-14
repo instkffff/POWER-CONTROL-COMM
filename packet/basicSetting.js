@@ -1,3 +1,4 @@
+// packet/unifiedPacket.js
 import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1, bufferToFloat, floatToBuffer } from './HEX.js';
 
 /* 
@@ -36,34 +37,34 @@ data 55
  * @param {number} data.retry - 重试次数
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateBasicSettingPacket(functionCode = 11, data = {
-    totalPower: 1000.0,
-    reactivePower: 400.0,
-    activePower: 990.0,
-    inductorPower: 990.0,
-    delay1: 60,
-    delay2: 61,
-    delay3: 62,
-    retry: 4
-}) {
+function generateBasicSettingPacket(functionCode = 11, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
+    
+    // 默认值
+    const defaultData = {
+        totalPower: 1000.0,
+        reactivePower: 400.0,
+        activePower: 990.0,
+        inductorPower: 990.0,
+        delay1: 60,
+        delay2: 61,
+        delay3: 62,
+        retry: 4
+    };
+    
+    // 合并传入数据和默认值
+    const mergedData = { ...defaultData, ...data };
     
     // 处理浮点数数据
     const floatBuffers = [];
     const floatFields = ['totalPower', 'reactivePower', 'activePower', 'inductorPower'];
     
     for (const field of floatFields) {
-        let floatBuffer;
-        if (typeof data[field] === 'number') {
-            // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualValue = data[field] * 10;
-            floatBuffer = floatToBuffer(actualValue);
-        } else {
-            // 如果已经是buffer
-            floatBuffer = data[field];
-        }
+        // 转换为实际浮点数值并转为buffer
+        const actualValue = mergedData[field] * 10;
+        const floatBuffer = floatToBuffer(actualValue);
         floatBuffers.push(floatBuffer);
     }
     
@@ -72,15 +73,9 @@ function generateBasicSettingPacket(functionCode = 11, data = {
     const intFields = ['delay1', 'delay2', 'delay3', 'retry'];
     
     for (const field of intFields) {
-        let intBuffer;
-        if (typeof data[field] === 'number') {
-            // 如果是数字，转换为2字节小端序buffer
-            intBuffer = Buffer.alloc(2);
-            intBuffer.writeUInt16LE(data[field], 0);
-        } else {
-            // 如果已经是buffer
-            intBuffer = data[field];
-        }
+        // 转换为2字节小端序buffer
+        const intBuffer = Buffer.alloc(2);
+        intBuffer.writeUInt16LE(mergedData[field], 0);
         intBuffers.push(intBuffer);
     }
     
@@ -185,20 +180,13 @@ function parseBasicSettingPacket(packet) {
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateBasicSettingResponse(functionCode = 91, data = { hex: "55" }) {
+function generateBasicSettingResponse(functionCode = 91, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
-    if (data.hex) {
-        // 十六进制字符串形式
-        dataBuffer = Buffer.from(data.hex, 'hex');
-    } else {
-        // 默认成功响应
-        dataBuffer = Buffer.from([0x55]);
-    }
+    // 处理数据部分 - 只处理hex格式数据
+    const dataBuffer = Buffer.from(data.hex, 'hex')
     
     // 计算长度（字节数）
     const length = dataBuffer.length;

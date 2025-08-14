@@ -1,3 +1,4 @@
+// packet/unifiedPacket.js
 import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1, bufferToFloat, floatToBuffer } from './HEX.js';
 
 /* send data
@@ -39,52 +40,44 @@ data 55
  * @param {Array<Object>} data.weekSchedule - 一周的时段安排
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateSchedulePacket(functionCode = 14, data = {
-    period: 1,
-    mode: 1,
-    power: 0.0,
-    weekSchedule: [
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周一
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周二
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周三
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周四
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周五
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周六
-        { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }  // 周日
-    ]
-}) {
+function generateSchedulePacket(functionCode = 14, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
+    // 默认值
+    const defaultData = {
+        period: 1,
+        mode: 1,
+        power: 0.0,
+        weekSchedule: [
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周一
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周二
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周三
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周四
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周五
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周六
+            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }  // 周日
+        ]
+    };
+    
+    // 合并传入数据和默认值
+    const mergedData = { ...defaultData, ...data };
+    
     // 时段编号
-    const periodBuffer = intToBuffer1(data.period);
+    const periodBuffer = intToBuffer1(mergedData.period);
     
     // 处理模式数据
-    let modeBuffer;
-    if (typeof data.mode === 'number') {
-        // 如果是数字，转换为2字节小端序buffer
-        modeBuffer = Buffer.alloc(2);
-        modeBuffer.writeUInt16LE(data.mode, 0);
-    } else {
-        // 如果已经是buffer
-        modeBuffer = data.mode;
-    }
+    const modeBuffer = Buffer.alloc(2);
+    modeBuffer.writeUInt16LE(mergedData.mode, 0);
     
     // 处理功率数据
-    let powerBuffer;
-    if (typeof data.power === 'number') {
-        // 如果是数字，转换为实际浮点数值并转为buffer
-        const actualValue = data.power * 10;
-        powerBuffer = floatToBuffer(actualValue);
-    } else {
-        // 如果已经是buffer
-        powerBuffer = data.power;
-    }
+    const actualValue = mergedData.power * 10;
+    const powerBuffer = floatToBuffer(actualValue);
     
     // 处理一周的时段安排
     const weekBuffers = [];
-    for (const day of data.weekSchedule) {
+    for (const day of mergedData.weekSchedule) {
         const haltBuffer = Buffer.from([day.haltHour, day.haltMinute]);
         const openBuffer = Buffer.from([day.openHour, day.openMinute]);
         weekBuffers.push(haltBuffer, openBuffer);
@@ -191,20 +184,13 @@ function parseSchedulePacket(packet) {
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateScheduleResponse(functionCode = 94, data = { hex: "55" }) {
+function generateScheduleResponse(functionCode = 94, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
-    if (data.hex) {
-        // 十六进制字符串形式
-        dataBuffer = Buffer.from(data.hex, 'hex');
-    } else {
-        // 默认成功响应
-        dataBuffer = Buffer.from([0x55]);
-    }
+    // 处理数据部分 - 只处理hex格式数据
+    const dataBuffer = Buffer.from(data.hex, 'hex')
     
     // 计算长度（字节数）
     const length = dataBuffer.length;
@@ -252,9 +238,9 @@ function parseScheduleResponse(packet) {
 
 export { generateSchedulePacket, parseSchedulePacket, generateScheduleResponse, parseScheduleResponse };
 
-/* // 使用示例:
+// 使用示例:
 
-// 生成时段设置命令包
+/* // 生成时段设置命令包
 const scheduleCommand = generateSchedulePacket(14, {
     period: 1,
     mode: 1,  // 开关机模式
@@ -283,5 +269,4 @@ console.log('时段设置响应包:', scheduleResponse.toString('hex')); // 应�
 // 解析时段设置响应包
 const responsePacket = Buffer.from('940155', 'hex');
 const parsedResponse = parseScheduleResponse(responsePacket);
-console.log('解析响应:', parsedResponse);
-*/
+console.log('解析响应:', parsedResponse); */

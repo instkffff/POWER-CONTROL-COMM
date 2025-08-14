@@ -1,3 +1,4 @@
+// packet/unifiedPacket.js
 import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1 } from './HEX.js';
 
 /* 
@@ -21,20 +22,13 @@ data 55
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "AAAA" 表示解锁数据)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateUnlockPacket(functionCode = 19, data = { hex: "AAAA" }) {
+function generateUnlockPacket(functionCode = 19, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
-    if (data.hex) {
-        // 十六进制字符串形式
-        dataBuffer = Buffer.from(data.hex, 'hex');
-    } else {
-        // 默认解锁数据
-        dataBuffer = Buffer.from([0xAA, 0xAA]);
-    }
+    // 处理数据部分 - 只处理hex格式数据
+    const dataBuffer = Buffer.from(data.hex, 'hex')
     
     // 计算长度（字节数）
     const length = dataBuffer.length;
@@ -87,20 +81,13 @@ function parseUnlockPacket(packet) {
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateUnlockResponse(functionCode = 99, data = { hex: "55" }) {
+function generateUnlockResponse(functionCode = 99, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
-    if (data.hex) {
-        // 十六进制字符串形式
-        dataBuffer = Buffer.from(data.hex, 'hex');
-    } else {
-        // 默认成功响应
-        dataBuffer = Buffer.from([0x55]);
-    }
+    // 处理数据部分 - 只处理hex格式数据
+    const dataBuffer = Buffer.from(data.hex, 'hex') 
     
     // 计算长度（字节数）
     const length = dataBuffer.length;
@@ -166,6 +153,5 @@ console.log('解锁响应包:', unlockResponse); // 应输出: "990155"
 // 解析解锁响应包
 const responsePacket = Buffer.from('990155', 'hex');
 const parsedResponse = parseUnlockResponse(responsePacket);
-console.log('解析响应:', parsedResponse);
+console.log('解析响应:', parsedResponse); */
 
- */

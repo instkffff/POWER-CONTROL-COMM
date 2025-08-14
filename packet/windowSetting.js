@@ -1,3 +1,4 @@
+// packet/unifiedPacket.js
 import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1, bufferToFloat, floatToBuffer } from './HEX.js';
 
 /* 
@@ -27,54 +28,36 @@ data 55
  * @param {number} data.factorB - 窗口系数B (float / 1000)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateWindowSettingPacket(functionCode = 13, data = {
-    powerA: 0.0,
-    powerB: 0.0,
-    factorA: 100.0,
-    factorB: 100.0
-}) {
+function generateWindowSettingPacket(functionCode = 13, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理窗口功率数据
-    const powerBuffers = [];
-    const powerFields = ['powerA', 'powerB'];
+    // 默认值
+    const defaultData = {
+        powerA: 0.0,
+        powerB: 0.0,
+        factorA: 100.0,
+        factorB: 100.0
+    };
     
-    for (const field of powerFields) {
-        let powerBuffer;
-        if (typeof data[field] === 'number') {
-            // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualValue = data[field] * 10;
-            powerBuffer = floatToBuffer(actualValue);
-        } else {
-            // 如果已经是buffer
-            powerBuffer = data[field];
-        }
-        powerBuffers.push(powerBuffer);
-    }
+    // 合并传入数据和默认值
+    const mergedData = { ...defaultData, ...data };
+    
+    // 处理窗口功率数据
+    const powerABuffer = floatToBuffer(mergedData.powerA * 10);
+    const powerBBuffer = floatToBuffer(mergedData.powerB * 10);
     
     // 处理窗口系数数据
-    const factorBuffers = [];
-    const factorFields = ['factorA', 'factorB'];
-    
-    for (const field of factorFields) {
-        let factorBuffer;
-        if (typeof data[field] === 'number') {
-            // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualValue = data[field] * 1000;
-            factorBuffer = floatToBuffer(actualValue);
-        } else {
-            // 如果已经是buffer
-            factorBuffer = data[field];
-        }
-        factorBuffers.push(factorBuffer);
-    }
+    const factorABuffer = floatToBuffer(mergedData.factorA * 1000);
+    const factorBBuffer = floatToBuffer(mergedData.factorB * 1000);
     
     // 数据部分
     const dataBuffer = Buffer.concat([
-        ...powerBuffers,
-        ...factorBuffers
+        powerABuffer,
+        powerBBuffer,
+        factorABuffer,
+        factorBBuffer
     ]);
     
     // 计算长度（字节数）
@@ -156,20 +139,13 @@ function parseWindowSettingPacket(packet) {
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateWindowSettingResponse(functionCode = 93, data = { hex: "55" }) {
+function generateWindowSettingResponse(functionCode = 93, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
-    if (data.hex) {
-        // 十六进制字符串形式
-        dataBuffer = Buffer.from(data.hex, 'hex');
-    } else {
-        // 默认成功响应
-        dataBuffer = Buffer.from([0x55]);
-    }
+    // 处理数据部分 - 只处理hex格式数据
+    const dataBuffer = Buffer.from(data.hex, 'hex')
     
     // 计算长度（字节数）
     const length = dataBuffer.length;

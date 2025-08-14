@@ -200,7 +200,7 @@ function parseReadKWHResponse(packet) {
 
 export { generateReadKWHPacket, parseReadKWHPacket, generateReadKWHResponse, parseReadKWHResponse };
 
-// 使用示例:
+/* // 使用示例:
 
 // 生成读取电量命令包
 const readKWHCommand = generateReadKWHPacket(2, {});
@@ -227,3 +227,4 @@ console.log('读取电量响应包:', readKWHResponse);
 const responsePacket = Buffer.from('821c000000000000000000000000000000000000c842000000000000c842', 'hex');
 const parsedResponse = parseReadKWHResponse(responsePacket);
 console.log('解析响应:', parsedResponse);
+ */
