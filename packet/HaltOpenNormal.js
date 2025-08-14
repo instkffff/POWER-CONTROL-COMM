@@ -4,9 +4,9 @@ import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1 
 /**
  * 生成命令数据包
  * @param {number} functionCode - 功能码 (默认18)
- * @param {Object|Buffer|Array<number>} data - 数据部分，可以是对象、Buffer或数组
+ * @param {Object} data - 数据对象
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "5555" 表示强制开机)
- * @param {number} data.action - 操作类型: 0x5555=强制开机, 0xAAAA=强制关机, 0xBBBB=恢复正常
+ * @param {string} data.action - 操作类型: 'forceOpen'=强制开机, 'forceHalt'=强制关机, 'normal'=恢复正常
  * @returns {Buffer} - 完整的命令数据Buffer
  */
 function HONgenerateCommandPacket(functionCode = 18, data) {
@@ -16,14 +16,8 @@ function HONgenerateCommandPacket(functionCode = 18, data) {
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
-    } else if (typeof data === 'object' && data !== null) {
-        // 如果数据是对象形式
+    // 只处理对象形式的数据
+    if (typeof data === 'object' && data !== null) {
         if (data.hex) {
             // 十六进制字符串形式
             dataBuffer = Buffer.from(data.hex, 'hex');
@@ -61,7 +55,7 @@ function HONgenerateCommandPacket(functionCode = 18, data) {
 /**
  * 生成响应数据包
  * @param {number} functionCode - 功能码 (默认98)
- * @param {Object|Buffer|Array<number>} data - 数据部分，可以是对象、Buffer或数组
+ * @param {Object} data - 数据对象
  * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @param {boolean} data.success - 是否成功
  * @returns {Buffer} - 完整的响应数据Buffer
@@ -73,14 +67,8 @@ function HONgenerateResponsePacket(functionCode = 98, data) {
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
-    } else if (typeof data === 'object' && data !== null) {
-        // 如果数据是对象形式
+    // 只处理对象形式的数据
+    if (typeof data === 'object' && data !== null) {
         if (data.hex) {
             // 十六进制字符串形式
             dataBuffer = Buffer.from(data.hex, 'hex');
@@ -184,7 +172,7 @@ export {
     HONparseResponsePacket 
 };
 
-/* // 使用示例:
+// 使用示例:
 
 // 生成强制开机命令包 - 使用对象形式传入十六进制字符串
 const forceOpenCommand = HONgenerateCommandPacket(18, { hex: "5555" });
@@ -210,4 +198,4 @@ console.log('解析命令:', parsedCommand);
 // 解析强制开机响应包
 const responsePacket = Buffer.from('980155', 'hex');
 const parsedResponse = HONparseResponsePacket(responsePacket);
-console.log('解析响应:', parsedResponse); */
+console.log('解析响应:', parsedResponse);
