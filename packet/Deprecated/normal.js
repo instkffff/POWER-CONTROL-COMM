@@ -1,12 +1,12 @@
-import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1 } from './HEX.js';
+import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1 } from '../HEX.js';
 
 /* send data
 
 function code 18
 length 02
-data AA AA
+data BB BB
 
-recive data // 返回同强制开机
+recive data // 返回同强制关机
 
 function code 98 // 命令位 = 18 + 80
 length 01
@@ -14,12 +14,12 @@ data 55
 */
 
 /**
- * 生成强制关机命令数据包
+ * 生成恢复正常命令数据包
  * @param {number} functionCode - 功能码 (默认18)
  * @param {Buffer|Array<number>} data - 数据部分
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateForceHaltPacket(functionCode = 18, data = Buffer.from([0xAA, 0xAA])) {
+function generateNormalPacket(functionCode = 18, data = Buffer.from([0xBB, 0xBB])) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
@@ -45,11 +45,11 @@ function generateForceHaltPacket(functionCode = 18, data = Buffer.from([0xAA, 0x
 }
 
 /**
- * 解析强制关机命令数据包
+ * 解析恢复正常命令数据包
  * @param {Buffer} packet - 命令数据包Buffer
  * @returns {Object} - 解析结果对象
  */
-function parseForceHaltPacket(packet) {
+function parseNormalPacket(packet) {
     if (packet.length < 2) {
         throw new Error('命令数据包长度不足');
     }
@@ -79,12 +79,12 @@ function parseForceHaltPacket(packet) {
 }
 
 /**
- * 生成强制关机响应数据包
+ * 生成恢复正常响应数据包
  * @param {number} functionCode - 功能码 (默认98)
  * @param {Buffer|Array<number>} data - 数据部分
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateForceHaltResponse(functionCode = 98, data = Buffer.from([0x55])) {
+function generateNormalResponse(functionCode = 98, data = Buffer.from([0x55])) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
@@ -110,11 +110,11 @@ function generateForceHaltResponse(functionCode = 98, data = Buffer.from([0x55])
 }
 
 /**
- * 解析强制关机响应数据包
+ * 解析恢复正常响应数据包
  * @param {Buffer} packet - 响应数据包Buffer
  * @returns {Object} - 解析结果对象
  */
-function parseForceHaltResponse(packet) {
+function parseNormalResponse(packet) {
     if (packet.length < 2) {
         throw new Error('响应数据包长度不足');
     }
@@ -143,26 +143,25 @@ function parseForceHaltResponse(packet) {
     };
 }
 
-export { generateForceHaltPacket, parseForceHaltPacket, generateForceHaltResponse, parseForceHaltResponse };
+export { generateNormalPacket, parseNormalPacket, generateNormalResponse, parseNormalResponse };
 
 /* // 使用示例:
 
-// 生成强制关机命令包
-const forceHaltCommand = generateForceHaltPacket();
-console.log('强制关机命令包:', forceHaltCommand); // 应输出: "1802aaaa"
+// 生成恢复正常命令包
+const normalCommand = generateNormalPacket();
+console.log('恢复正常命令包:', normalCommand); // 应输出: "1802bbbb"
 
-// 解析强制关机命令包
-const commandPacket = Buffer.from('1802aaaa', 'hex');
-const parsedCommand = parseForceHaltPacket(commandPacket);
+// 解析恢复正常命令包
+const commandPacket = Buffer.from('1802bbbb', 'hex');
+const parsedCommand = parseNormalPacket(commandPacket);
 console.log('解析命令:', parsedCommand);
 
-// 生成强制关机响应包
-const forceHaltResponse = generateForceHaltResponse();
-console.log('强制关机响应包:', forceHaltResponse); // 应输出: "980155"
+// 生成恢复正常响应包
+const normalResponse = generateNormalResponse();
+console.log('恢复正常响应包:', normalResponse); // 应输出: "980155"
 
-// 解析强制关机响应包
+// 解析恢复正常响应包
 const responsePacket = Buffer.from('980155', 'hex');
-const parsedResponse = parseForceHaltResponse(responsePacket);
+const parsedResponse = parseNormalResponse(responsePacket);
 console.log('解析响应:', parsedResponse);
-
  */
