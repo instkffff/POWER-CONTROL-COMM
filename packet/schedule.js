@@ -32,14 +32,14 @@ data 55
 /**
  * 生成时段设置命令数据包
  * @param {number} functionCode - 功能码 (默认14)
- * @param {Object} scheduleData - 时段设置数据
- * @param {number} scheduleData.period - 时段编号 (1-7)
- * @param {number|Buffer} scheduleData.mode - 时段工作模式 (0=无模式, 1=开关机, 2=小功率)
- * @param {number|Buffer} scheduleData.power - 时段功率 (float / 10, 仅小功率模式生效)
- * @param {Array<Object>} scheduleData.weekSchedule - 一周的时段安排
+ * @param {Object} data - 时段设置数据
+ * @param {number} data.period - 时段编号 (1-7)
+ * @param {number} data.mode - 时段工作模式 (0=无模式, 1=开关机, 2=小功率)
+ * @param {number} data.power - 时段功率 (float / 10, 仅小功率模式生效)
+ * @param {Array<Object>} data.weekSchedule - 一周的时段安排
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateSchedulePacket(functionCode = 14, scheduleData = {
+function generateSchedulePacket(functionCode = 14, data = {
     period: 1,
     mode: 1,
     power: 0.0,
@@ -58,33 +58,33 @@ function generateSchedulePacket(functionCode = 14, scheduleData = {
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 时段编号
-    const periodBuffer = intToBuffer1(scheduleData.period);
+    const periodBuffer = intToBuffer1(data.period);
     
     // 处理模式数据
     let modeBuffer;
-    if (typeof scheduleData.mode === 'number') {
+    if (typeof data.mode === 'number') {
         // 如果是数字，转换为2字节小端序buffer
         modeBuffer = Buffer.alloc(2);
-        modeBuffer.writeUInt16LE(scheduleData.mode, 0);
+        modeBuffer.writeUInt16LE(data.mode, 0);
     } else {
         // 如果已经是buffer
-        modeBuffer = scheduleData.mode;
+        modeBuffer = data.mode;
     }
     
     // 处理功率数据
     let powerBuffer;
-    if (typeof scheduleData.power === 'number') {
+    if (typeof data.power === 'number') {
         // 如果是数字，转换为实际浮点数值并转为buffer
-        const actualValue = scheduleData.power * 10;
+        const actualValue = data.power * 10;
         powerBuffer = floatToBuffer(actualValue);
     } else {
         // 如果已经是buffer
-        powerBuffer = scheduleData.power;
+        powerBuffer = data.power;
     }
     
     // 处理一周的时段安排
     const weekBuffers = [];
-    for (const day of scheduleData.weekSchedule) {
+    for (const day of data.weekSchedule) {
         const haltBuffer = Buffer.from([day.haltHour, day.haltMinute]);
         const openBuffer = Buffer.from([day.openHour, day.openMinute]);
         weekBuffers.push(haltBuffer, openBuffer);
@@ -187,22 +187,23 @@ function parseSchedulePacket(packet) {
 /**
  * 生成时段设置响应数据包
  * @param {number} functionCode - 功能码 (默认94)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object} data - 数据部分
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateScheduleResponse(functionCode = 94, data = Buffer.from([0x55])) {
+function generateScheduleResponse(functionCode = 94, data = { hex: "55" }) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 处理数据部分
     let dataBuffer;
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
+    if (data.hex) {
+        // 十六进制字符串形式
+        dataBuffer = Buffer.from(data.hex, 'hex');
+    } else {
+        // 默认成功响应
+        dataBuffer = Buffer.from([0x55]);
     }
     
     // 计算长度（字节数）
@@ -276,11 +277,11 @@ const parsedCommand = parseSchedulePacket(commandPacket);
 console.log('解析命令:', parsedCommand);
 
 // 生成时段设置响应包
-const scheduleResponse = generateScheduleResponse();
+const scheduleResponse = generateScheduleResponse(94, { hex: "55" });
 console.log('时段设置响应包:', scheduleResponse.toString('hex')); // 应输出: "940155"
 
 // 解析时段设置响应包
 const responsePacket = Buffer.from('940155', 'hex');
 const parsedResponse = parseScheduleResponse(responsePacket);
 console.log('解析响应:', parsedResponse);
- */
+*/

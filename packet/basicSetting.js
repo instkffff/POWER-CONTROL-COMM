@@ -25,18 +25,18 @@ data 55
 /**
  * 生成基本设置命令数据包
  * @param {number} functionCode - 功能码 (默认11)
- * @param {Object} settingsData - 设置数据
- * @param {number|Buffer} settingsData.totalPower - 总功率 (float / 10)
- * @param {number|Buffer} settingsData.reactivePower - 阻性功率 (float / 10)
- * @param {number|Buffer} settingsData.activePower - 上电功率 (float / 10)
- * @param {number|Buffer} settingsData.inductorPower - 感性功率 (float / 10)
- * @param {number|Buffer} settingsData.delay1 - 延时1
- * @param {number|Buffer} settingsData.delay2 - 延时2
- * @param {number|Buffer} settingsData.delay3 - 延时3
- * @param {number|Buffer} settingsData.retry - 重试次数
+ * @param {Object} data - 设置数据
+ * @param {number} data.totalPower - 总功率 (float / 10)
+ * @param {number} data.reactivePower - 阻性功率 (float / 10)
+ * @param {number} data.activePower - 上电功率 (float / 10)
+ * @param {number} data.inductorPower - 感性功率 (float / 10)
+ * @param {number} data.delay1 - 延时1
+ * @param {number} data.delay2 - 延时2
+ * @param {number} data.delay3 - 延时3
+ * @param {number} data.retry - 重试次数
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateBasicSettingPacket(functionCode = 11, settingsData = {
+function generateBasicSettingPacket(functionCode = 11, data = {
     totalPower: 1000.0,
     reactivePower: 400.0,
     activePower: 990.0,
@@ -56,13 +56,13 @@ function generateBasicSettingPacket(functionCode = 11, settingsData = {
     
     for (const field of floatFields) {
         let floatBuffer;
-        if (typeof settingsData[field] === 'number') {
+        if (typeof data[field] === 'number') {
             // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualValue = settingsData[field] * 10;
+            const actualValue = data[field] * 10;
             floatBuffer = floatToBuffer(actualValue);
         } else {
             // 如果已经是buffer
-            floatBuffer = settingsData[field];
+            floatBuffer = data[field];
         }
         floatBuffers.push(floatBuffer);
     }
@@ -73,13 +73,13 @@ function generateBasicSettingPacket(functionCode = 11, settingsData = {
     
     for (const field of intFields) {
         let intBuffer;
-        if (typeof settingsData[field] === 'number') {
+        if (typeof data[field] === 'number') {
             // 如果是数字，转换为2字节小端序buffer
             intBuffer = Buffer.alloc(2);
-            intBuffer.writeUInt16LE(settingsData[field], 0);
+            intBuffer.writeUInt16LE(data[field], 0);
         } else {
             // 如果已经是buffer
-            intBuffer = settingsData[field];
+            intBuffer = data[field];
         }
         intBuffers.push(intBuffer);
     }
@@ -181,22 +181,23 @@ function parseBasicSettingPacket(packet) {
 /**
  * 生成基本设置响应数据包
  * @param {number} functionCode - 功能码 (默认91)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object} data - 数据部分
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateBasicSettingResponse(functionCode = 91, data = Buffer.from([0x55])) {
+function generateBasicSettingResponse(functionCode = 91, data = { hex: "55" }) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 处理数据部分
     let dataBuffer;
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
+    if (data.hex) {
+        // 十六进制字符串形式
+        dataBuffer = Buffer.from(data.hex, 'hex');
+    } else {
+        // 默认成功响应
+        dataBuffer = Buffer.from([0x55]);
     }
     
     // 计算长度（字节数）
@@ -266,7 +267,7 @@ const parsedCommand = parseBasicSettingPacket(commandPacket);
 console.log('解析命令:', parsedCommand);
 
 // 生成基本设置响应包
-const basicSettingResponse = generateBasicSettingResponse();
+const basicSettingResponse = generateBasicSettingResponse(91, { hex: "55" });
 console.log('基本设置响应包:', basicSettingResponse); // 应输出: "910155"
 
 // 解析基本设置响应包

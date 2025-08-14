@@ -21,9 +21,10 @@ kw/h 00 00 C8 42 // 总电量 KWh = float / 10
 /**
  * 生成读取电量命令数据包
  * @param {number} functionCode - 功能码 (默认2)
+ * @param {Object} data - 数据部分（空对象）
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateReadKWHPacket(functionCode = 2) {
+function generateReadKWHPacket(functionCode = 2, data = {}) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
@@ -75,17 +76,17 @@ function parseReadKWHPacket(packet) {
 /**
  * 生成读取电量响应数据包
  * @param {number} functionCode - 功能码 (默认82)
- * @param {Object} kwhData - 电量数据
- * @param {number|Buffer} kwhData.unknown1 - 未知用途电量 (KWh = float / 10)
- * @param {number|Buffer} kwhData.unknown2 - 未知用途电量 (KWh = float / 10)
- * @param {number|Buffer} kwhData.unknown3 - 未知用途电量 (KWh = float / 10)
- * @param {number|Buffer} kwhData.rechargeKWH - 充值电量 (KWh = float / 10)
- * @param {number|Buffer} kwhData.initialKWH - 初始电量 (KWh = float / 10)
- * @param {number|Buffer} kwhData.usedKWH - 使用电量 (KWh = float / 10)
- * @param {number|Buffer} kwhData.totalKWH - 总电量 (KWh = float / 10)
+ * @param {Object} data - 电量数据
+ * @param {number} data.unknown1 - 未知用途电量 (KWh = float / 10)
+ * @param {number} data.unknown2 - 未知用途电量 (KWh = float / 10)
+ * @param {number} data.unknown3 - 未知用途电量 (KWh = float / 10)
+ * @param {number} data.rechargeKWH - 充值电量 (KWh = float / 10)
+ * @param {number} data.initialKWH - 初始电量 (KWh = float / 10)
+ * @param {number} data.usedKWH - 使用电量 (KWh = float / 10)
+ * @param {number} data.totalKWH - 总电量 (KWh = float / 10)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateReadKWHResponse(functionCode = 82, kwhData = {
+function generateReadKWHResponse(functionCode = 82, data = {
     unknown1: 0.0,
     unknown2: 0.0,
     unknown3: 0.0,
@@ -107,13 +108,13 @@ function generateReadKWHResponse(functionCode = 82, kwhData = {
     
     for (const field of kwhFields) {
         let kwhBuffer;
-        if (typeof kwhData[field] === 'number') {
+        if (typeof data[field] === 'number') {
             // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualKWH = kwhData[field] * 10;
+            const actualKWH = data[field] * 10;
             kwhBuffer = floatToBuffer(actualKWH);
         } else {
             // 如果已经是buffer
-            kwhBuffer = kwhData[field];
+            kwhBuffer = data[field];
         }
         kwhBuffers.push(kwhBuffer);
     }
@@ -199,10 +200,10 @@ function parseReadKWHResponse(packet) {
 
 export { generateReadKWHPacket, parseReadKWHPacket, generateReadKWHResponse, parseReadKWHResponse };
 
-/* // 使用示例:
+// 使用示例:
 
 // 生成读取电量命令包
-const readKWHCommand = generateReadKWHPacket();
+const readKWHCommand = generateReadKWHPacket(2, {});
 console.log('读取电量命令包:', readKWHCommand); // 应输出: "0200"
 
 // 解析读取电量命令包
@@ -225,4 +226,4 @@ console.log('读取电量响应包:', readKWHResponse);
 // 解析读取电量响应包
 const responsePacket = Buffer.from('821c000000000000000000000000000000000000c842000000000000c842', 'hex');
 const parsedResponse = parseReadKWHResponse(responsePacket);
-console.log('解析响应:', parsedResponse); */
+console.log('解析响应:', parsedResponse);

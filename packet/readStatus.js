@@ -21,9 +21,10 @@ power 30 5D 6B 42 // 额定功率 p = float / 10 感性功率采样 p = vi
 /**
  * 生成读取状态命令数据包
  * @param {number} functionCode - 功能码 (默认7)
+ * @param {Object} data - 数据部分（空对象）
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateReadStatusPacket(functionCode = 7) {
+function generateReadStatusPacket(functionCode = 7, data = {}) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
@@ -75,15 +76,15 @@ function parseReadStatusPacket(packet) {
 /**
  * 生成读取状态响应数据包
  * @param {number} functionCode - 功能码 (默认87)
- * @param {Object} statusData - 状态数据
- * @param {number} statusData.statusCode - 状态码 (0=关机, 1=正常开机, 2=强制开机)
- * @param {number} statusData.reasonCode - 原因码 (0=未断电, 4=电量空, 5=时段关机, 6=强制关机, 7=已锁定, 8=未知状态)
- * @param {number} statusData.voltage - 电压值 (float / 10)
- * @param {number} statusData.current - 电流值 (float / 1000)
- * @param {number} statusData.power - 功率值 (float / 10)
+ * @param {Object} data - 状态数据
+ * @param {number} data.statusCode - 状态码 (0=关机, 1=正常开机, 2=强制开机)
+ * @param {number} data.reasonCode - 原因码 (0=未断电, 4=电量空, 5=时段关机, 6=强制关机, 7=已锁定, 8=未知状态)
+ * @param {number} data.voltage - 电压值 (float / 10)
+ * @param {number} data.current - 电流值 (float / 1000)
+ * @param {number} data.power - 功率值 (float / 10)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateReadStatusResponse(functionCode = 87, statusData = {
+function generateReadStatusResponse(functionCode = 87, data = {
     statusCode: 1,
     reasonCode: 0,
     voltage: 25.3,
@@ -97,50 +98,50 @@ function generateReadStatusResponse(functionCode = 87, statusData = {
     // 处理状态码和原因码
     let statusCodeBuffer, reasonCodeBuffer;
     
-    if (typeof statusData.statusCode === 'number') {
+    if (typeof data.statusCode === 'number') {
         // 如果是数字，转换为Buffer (小端序)
-        statusCodeBuffer = Buffer.from([statusData.statusCode, 0x00]);
+        statusCodeBuffer = Buffer.from([data.statusCode, 0x00]);
     } else {
         // 如果已经是buffer
-        statusCodeBuffer = statusData.statusCode;
+        statusCodeBuffer = data.statusCode;
     }
     
-    if (typeof statusData.reasonCode === 'number') {
+    if (typeof data.reasonCode === 'number') {
         // 如果是数字，转换为Buffer (小端序)
-        reasonCodeBuffer = Buffer.from([statusData.reasonCode, 0x00]);
+        reasonCodeBuffer = Buffer.from([data.reasonCode, 0x00]);
     } else {
         // 如果已经是buffer
-        reasonCodeBuffer = statusData.reasonCode;
+        reasonCodeBuffer = data.reasonCode;
     }
     
     // 处理浮点数数据
     let voltageBuffer, currentBuffer, powerBuffer;
     
-    if (typeof statusData.voltage === 'number') {
+    if (typeof data.voltage === 'number') {
         // 如果是数字，转换为实际浮点数值并转为buffer
-        const actualVoltage = statusData.voltage * 10;
+        const actualVoltage = data.voltage * 10;
         voltageBuffer = floatToBuffer(actualVoltage);
     } else {
         // 如果已经是buffer
-        voltageBuffer = statusData.voltage;
+        voltageBuffer = data.voltage;
     }
     
-    if (typeof statusData.current === 'number') {
+    if (typeof data.current === 'number') {
         // 如果是数字，转换为实际浮点数值并转为buffer
-        const actualCurrent = statusData.current * 1000;
+        const actualCurrent = data.current * 1000;
         currentBuffer = floatToBuffer(actualCurrent);
     } else {
         // 如果已经是buffer
-        currentBuffer = statusData.current;
+        currentBuffer = data.current;
     }
     
-    if (typeof statusData.power === 'number') {
+    if (typeof data.power === 'number') {
         // 如果是数字，转换为实际浮点数值并转为buffer
-        const actualPower = statusData.power * 10;
+        const actualPower = data.power * 10;
         powerBuffer = floatToBuffer(actualPower);
     } else {
         // 如果已经是buffer
-        powerBuffer = statusData.power;
+        powerBuffer = data.power;
     }
     
     // 数据部分
@@ -238,7 +239,7 @@ export { generateReadStatusPacket, parseReadStatusPacket, generateReadStatusResp
 /* // 使用示例:
 
 // 生成读取状态命令包
-const readStatusCommand = generateReadStatusPacket();
+const readStatusCommand = generateReadStatusPacket(7, {});
 console.log('读取状态命令包:', readStatusCommand); // 应输出: "0700"
 
 // 解析读取状态命令包
@@ -259,14 +260,5 @@ console.log('读取状态响应包:', readStatusResponse);
 // 解析读取状态响应包
 const responsePacket = Buffer.from('871001000000d1d60c458fc2a643305d6b42', 'hex');
 const parsedResponse = parseReadStatusResponse(responsePacket);
-console.log('解析响应:', {
-    functionCode: parsedResponse.functionCode,
-    length: parsedResponse.length,
-    statusCode: parsedResponse.statusCode,
-    reasonCode: parsedResponse.reasonCode,
-    voltage: parsedResponse.voltage,
-    current: parsedResponse.current,
-    power: parsedResponse.power,
-    isValid: parsedResponse.isValid
-});
+console.log('解析响应:', parsedResponse);
  */

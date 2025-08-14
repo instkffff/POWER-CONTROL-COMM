@@ -23,17 +23,17 @@ data 55
 /**
  * 生成充电设置命令数据包
  * @param {number} functionCode - 功能码 (默认12)
- * @param {Object} chargingData - 充电设置数据
- * @param {number|Buffer} chargingData.unknown1 - 未知用途电量 (KWh = float / 10)
- * @param {number|Buffer} chargingData.unknown2 - 未知用途电量 (KWh = float / 10)
- * @param {number|Buffer} chargingData.unknown3 - 未知用途电量 (KWh = float / 10)
- * @param {number|Buffer} chargingData.rechargeKWH - 充值电量 (KWh = float / 10)
- * @param {number|Buffer} chargingData.initialKWH - 初始电量 (KWh = float / 10)
- * @param {number|Buffer} chargingData.usedKWH - 使用电量 (KWh = float / 10)
- * @param {number|Buffer} chargingData.totalKWH - 总电量 (KWh = float / 10)
+ * @param {Object} data - 数据部分，必须是对象形式
+ * @param {number} data.unknown1 - 未知用途电量 (KWh = float / 10)
+ * @param {number} data.unknown2 - 未知用途电量 (KWh = float / 10)
+ * @param {number} data.unknown3 - 未知用途电量 (KWh = float / 10)
+ * @param {number} data.rechargeKWH - 充值电量 (KWh = float / 10)
+ * @param {number} data.initialKWH - 初始电量 (KWh = float / 10)
+ * @param {number} data.usedKWH - 使用电量 (KWh = float / 10)
+ * @param {number} data.totalKWH - 总电量 (KWh = float / 10)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateChargingPacket(functionCode = 12, chargingData = {
+function generateChargingPacket(functionCode = 12, data = {
     unknown1: 0.0,
     unknown2: 0.0,
     unknown3: 0.0,
@@ -55,13 +55,13 @@ function generateChargingPacket(functionCode = 12, chargingData = {
     
     for (const field of kwhFields) {
         let kwhBuffer;
-        if (typeof chargingData[field] === 'number') {
+        if (typeof data[field] === 'number') {
             // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualKWH = chargingData[field] * 10;
+            const actualKWH = data[field] * 10;
             kwhBuffer = floatToBuffer(actualKWH);
         } else {
             // 如果已经是buffer
-            kwhBuffer = chargingData[field];
+            kwhBuffer = data[field];
         }
         kwhBuffers.push(kwhBuffer);
     }
@@ -148,22 +148,23 @@ function parseChargingPacket(packet) {
 /**
  * 生成充电设置响应数据包
  * @param {number} functionCode - 功能码 (默认92)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object} data - 数据部分，必须是对象形式
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateChargingResponse(functionCode = 92, data = Buffer.from([0x55])) {
+function generateChargingResponse(functionCode = 92, data = { hex: "55" }) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 处理数据部分
     let dataBuffer;
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
+    if (data.hex) {
+        // 十六进制字符串形式
+        dataBuffer = Buffer.from(data.hex, 'hex');
+    } else {
+        // 默认成功响应
+        dataBuffer = Buffer.from([0x55]);
     }
     
     // 计算长度（字节数）
@@ -232,11 +233,10 @@ const parsedCommand = parseChargingPacket(commandPacket);
 console.log('解析命令:', parsedCommand);
 
 // 生成充电设置响应包
-const chargingResponse = generateChargingResponse();
+const chargingResponse = generateChargingResponse(92, { hex: "55" });
 console.log('充电设置响应包:', chargingResponse.toString('hex')); // 应输出: "920155"
 
 // 解析充电设置响应包
 const responsePacket = Buffer.from('920155', 'hex');
 const parsedResponse = parseChargingResponse(responsePacket);
 console.log('解析响应:', parsedResponse); */
-

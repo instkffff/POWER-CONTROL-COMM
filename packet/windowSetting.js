@@ -20,14 +20,14 @@ data 55
 /**
  * 生成窗口设置命令数据包
  * @param {number} functionCode - 功能码 (默认13)
- * @param {Object} windowData - 窗口设置数据
- * @param {number|Buffer} windowData.powerA - 窗口A功率 (float / 10)
- * @param {number|Buffer} windowData.powerB - 窗口B功率 (float / 10)
- * @param {number|Buffer} windowData.factorA - 窗口系数A (float / 1000)
- * @param {number|Buffer} windowData.factorB - 窗口系数B (float / 1000)
+ * @param {Object} data - 窗口设置数据
+ * @param {number} data.powerA - 窗口A功率 (float / 10)
+ * @param {number} data.powerB - 窗口B功率 (float / 10)
+ * @param {number} data.factorA - 窗口系数A (float / 1000)
+ * @param {number} data.factorB - 窗口系数B (float / 1000)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateWindowSettingPacket(functionCode = 13, windowData = {
+function generateWindowSettingPacket(functionCode = 13, data = {
     powerA: 0.0,
     powerB: 0.0,
     factorA: 100.0,
@@ -43,13 +43,13 @@ function generateWindowSettingPacket(functionCode = 13, windowData = {
     
     for (const field of powerFields) {
         let powerBuffer;
-        if (typeof windowData[field] === 'number') {
+        if (typeof data[field] === 'number') {
             // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualValue = windowData[field] * 10;
+            const actualValue = data[field] * 10;
             powerBuffer = floatToBuffer(actualValue);
         } else {
             // 如果已经是buffer
-            powerBuffer = windowData[field];
+            powerBuffer = data[field];
         }
         powerBuffers.push(powerBuffer);
     }
@@ -60,13 +60,13 @@ function generateWindowSettingPacket(functionCode = 13, windowData = {
     
     for (const field of factorFields) {
         let factorBuffer;
-        if (typeof windowData[field] === 'number') {
+        if (typeof data[field] === 'number') {
             // 如果是数字，转换为实际浮点数值并转为buffer
-            const actualValue = windowData[field] * 1000;
+            const actualValue = data[field] * 1000;
             factorBuffer = floatToBuffer(actualValue);
         } else {
             // 如果已经是buffer
-            factorBuffer = windowData[field];
+            factorBuffer = data[field];
         }
         factorBuffers.push(factorBuffer);
     }
@@ -152,22 +152,23 @@ function parseWindowSettingPacket(packet) {
 /**
  * 生成窗口设置响应数据包
  * @param {number} functionCode - 功能码 (默认93)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object} data - 数据部分
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateWindowSettingResponse(functionCode = 93, data = Buffer.from([0x55])) {
+function generateWindowSettingResponse(functionCode = 93, data = { hex: "55" }) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 处理数据部分
     let dataBuffer;
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
+    if (data.hex) {
+        // 十六进制字符串形式
+        dataBuffer = Buffer.from(data.hex, 'hex');
+    } else {
+        // 默认成功响应
+        dataBuffer = Buffer.from([0x55]);
     }
     
     // 计算长度（字节数）
@@ -233,11 +234,10 @@ const parsedCommand = parseWindowSettingPacket(commandPacket);
 console.log('解析命令:', parsedCommand);
 
 // 生成窗口设置响应包
-const windowSettingResponse = generateWindowSettingResponse();
+const windowSettingResponse = generateWindowSettingResponse(93, { hex: "55" });
 console.log('窗口设置响应包:', windowSettingResponse.toString('hex')); // 应输出: "930155"
 
 // 解析窗口设置响应包
 const responsePacket = Buffer.from('930155', 'hex');
 const parsedResponse = parseWindowSettingResponse(responsePacket);
 console.log('解析响应:', parsedResponse); */
-

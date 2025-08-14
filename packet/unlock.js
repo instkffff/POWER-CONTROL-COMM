@@ -17,22 +17,23 @@ data 55
 /**
  * 生成解锁命令数据包
  * @param {number} functionCode - 功能码 (默认19)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object} data - 数据部分
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "AAAA" 表示解锁数据)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateUnlockPacket(functionCode = 19, data = Buffer.from([0xAA, 0xAA])) {
+function generateUnlockPacket(functionCode = 19, data = { hex: "AAAA" }) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 处理数据部分
     let dataBuffer;
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
+    if (data.hex) {
+        // 十六进制字符串形式
+        dataBuffer = Buffer.from(data.hex, 'hex');
+    } else {
+        // 默认解锁数据
+        dataBuffer = Buffer.from([0xAA, 0xAA]);
     }
     
     // 计算长度（字节数）
@@ -82,22 +83,23 @@ function parseUnlockPacket(packet) {
 /**
  * 生成解锁响应数据包
  * @param {number} functionCode - 功能码 (默认99)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object} data - 数据部分
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateUnlockResponse(functionCode = 99, data = Buffer.from([0x55])) {
+function generateUnlockResponse(functionCode = 99, data = { hex: "55" }) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
     // 处理数据部分
     let dataBuffer;
-    if (Buffer.isBuffer(data)) {
-        // 如果数据是Buffer
-        dataBuffer = data;
-    } else if (Array.isArray(data)) {
-        // 如果数据是字节数组
-        dataBuffer = Buffer.from(data);
+    if (data.hex) {
+        // 十六进制字符串形式
+        dataBuffer = Buffer.from(data.hex, 'hex');
+    } else {
+        // 默认成功响应
+        dataBuffer = Buffer.from([0x55]);
     }
     
     // 计算长度（字节数）
@@ -149,7 +151,7 @@ export { generateUnlockPacket, parseUnlockPacket, generateUnlockResponse, parseU
 /* // 使用示例:
 
 // 生成解锁命令包
-const unlockCommand = generateUnlockPacket();
+const unlockCommand = generateUnlockPacket(19, { hex: "AAAA" });
 console.log('解锁命令包:', unlockCommand); // 应输出: "1902aaaa"
 
 // 解析解锁命令包
@@ -158,7 +160,7 @@ const parsedCommand = parseUnlockPacket(commandPacket);
 console.log('解析命令:', parsedCommand);
 
 // 生成解锁响应包
-const unlockResponse = generateUnlockResponse();
+const unlockResponse = generateUnlockResponse(99, { hex: "55" });
 console.log('解锁响应包:', unlockResponse); // 应输出: "990155"
 
 // 解析解锁响应包
@@ -166,4 +168,4 @@ const responsePacket = Buffer.from('990155', 'hex');
 const parsedResponse = parseUnlockResponse(responsePacket);
 console.log('解析响应:', parsedResponse);
 
-*/
+ */

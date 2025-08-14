@@ -4,22 +4,48 @@ import { bcdBufferToHexString, hexStringToBcdBuffer, bufferToInt1, intToBuffer1 
 /**
  * 生成命令数据包
  * @param {number} functionCode - 功能码 (默认18)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object|Buffer|Array<number>} data - 数据部分，可以是对象、Buffer或数组
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "5555" 表示强制开机)
+ * @param {number} data.action - 操作类型: 0x5555=强制开机, 0xAAAA=强制关机, 0xBBBB=恢复正常
  * @returns {Buffer} - 完整的命令数据Buffer
  */
 function HONgenerateCommandPacket(functionCode = 18, data) {
+    let dataBuffer;
+    
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
     if (Buffer.isBuffer(data)) {
         // 如果数据是Buffer
         dataBuffer = data;
     } else if (Array.isArray(data)) {
         // 如果数据是字节数组
         dataBuffer = Buffer.from(data);
+    } else if (typeof data === 'object' && data !== null) {
+        // 如果数据是对象形式
+        if (data.hex) {
+            // 十六进制字符串形式
+            dataBuffer = Buffer.from(data.hex, 'hex');
+        } else if (data.action === 'forceOpen') {
+            // 强制开机 [0x55, 0x55]
+            dataBuffer = Buffer.from([0x55, 0x55]);
+        } else if (data.action === 'forceHalt') {
+            // 强制关机 [0xAA, 0xAA]
+            dataBuffer = Buffer.from([0xAA, 0xAA]);
+        } else if (data.action === 'normal') {
+            // 恢复正常 [0xBB, 0xBB]
+            dataBuffer = Buffer.from([0xBB, 0xBB]);
+        } else if (data.bytes) {
+            // 自定义字节数据
+            dataBuffer = Buffer.from(data.bytes);
+        } else {
+            // 默认强制开机
+            dataBuffer = Buffer.from([0x55, 0x55]);
+        }
+    } else {
+        // 默认情况，强制开机
+        dataBuffer = Buffer.from([0x55, 0x55]);
     }
     
     // 计算长度（字节数）
@@ -35,22 +61,42 @@ function HONgenerateCommandPacket(functionCode = 18, data) {
 /**
  * 生成响应数据包
  * @param {number} functionCode - 功能码 (默认98)
- * @param {Buffer|Array<number>} data - 数据部分
+ * @param {Object|Buffer|Array<number>} data - 数据部分，可以是对象、Buffer或数组
+ * @param {string} data.hex - 十六进制字符串形式的数据 (如: "55" 表示成功)
+ * @param {boolean} data.success - 是否成功
  * @returns {Buffer} - 完整的响应数据Buffer
  */
 function HONgenerateResponsePacket(functionCode = 98, data) {
+    let dataBuffer;
+    
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString();
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 处理数据部分
-    let dataBuffer;
     if (Buffer.isBuffer(data)) {
         // 如果数据是Buffer
         dataBuffer = data;
     } else if (Array.isArray(data)) {
         // 如果数据是字节数组
         dataBuffer = Buffer.from(data);
+    } else if (typeof data === 'object' && data !== null) {
+        // 如果数据是对象形式
+        if (data.hex) {
+            // 十六进制字符串形式
+            dataBuffer = Buffer.from(data.hex, 'hex');
+        } else if (data.success === true || data.success === false) {
+            // 根据成功状态设置响应数据
+            dataBuffer = Buffer.from([data.success ? 0x55 : 0x00]);
+        } else if (data.bytes) {
+            // 自定义字节数据
+            dataBuffer = Buffer.from(data.bytes);
+        } else {
+            // 默认成功响应
+            dataBuffer = Buffer.from([0x55]);
+        }
+    } else {
+        // 默认情况，成功响应
+        dataBuffer = Buffer.from([0x55]);
     }
     
     // 计算长度（字节数）
@@ -140,29 +186,21 @@ export {
 
 /* // 使用示例:
 
-// 生成强制开机命令包
-const forceOpenCommand = HONgenerateCommandPacket(18, [0x55, 0x55]);
+// 生成强制开机命令包 - 使用对象形式传入十六进制字符串
+const forceOpenCommand = HONgenerateCommandPacket(18, { hex: "5555" });
 console.log('强制开机命令包:', forceOpenCommand);
 
-// 生成强制关机命令包
-const forceHaltCommand = HONgenerateCommandPacket(18, [0xAA, 0xAA]);
+// 生成强制关机命令包 - 使用对象形式传入十六进制字符串
+const forceHaltCommand = HONgenerateCommandPacket(18, { hex: "AAAA" });
 console.log('强制关机命令包:', forceHaltCommand);
 
-// 生成恢复正常命令包
-const normalCommand = HONgenerateCommandPacket(18, [0xBB, 0xBB]);
+// 生成恢复正常命令包 - 使用对象形式传入十六进制字符串
+const normalCommand = HONgenerateCommandPacket(18, { hex: "BBBB" });
 console.log('恢复正常命令包:', normalCommand);
 
-// 生成强制开机响应包
-const forceOpenResponse = HONgenerateResponsePacket(98, [0x55]);
+// 生成强制开机响应包 - 使用对象形式传入十六进制字符串
+const forceOpenResponse = HONgenerateResponsePacket(98, { hex: "55" });
 console.log('强制开机响应包:', forceOpenResponse);
-
-// 生成强制关机响应包
-const forceHaltResponse = HONgenerateResponsePacket(98, [0x55]);
-console.log('强制关机响应包:', forceHaltResponse);
-
-// 生成恢复正常响应包
-const normalResponse = HONgenerateResponsePacket(98, [0x55]);
-console.log('恢复正常响应包:', normalResponse);
 
 // 解析强制开机命令包
 const commandPacket = Buffer.from('18025555', 'hex');
@@ -172,5 +210,4 @@ console.log('解析命令:', parsedCommand);
 // 解析强制开机响应包
 const responsePacket = Buffer.from('980155', 'hex');
 const parsedResponse = HONparseResponsePacket(responsePacket);
-console.log('解析响应:', parsedResponse);
- */
+console.log('解析响应:', parsedResponse); */
