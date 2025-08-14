@@ -519,23 +519,23 @@
 
 ### 10. HaltOpenNormal.js
 
-#### HONgenerateCommandPacket(functionName, functionCode)
+#### HONgenerateCommandPacket(functionCode, data)
 
 生成命令数据包
 
 - 输入:
-  - functionName (string): 功能名称 ('forceOpen', 'forceHalt', 'normal')
   - functionCode (number): 功能码 (默认18)
+  - data (Buffer|Array(number)): 数据部分
 - 输出:
   - (Buffer): 完整的命令数据Buffer
 
-#### HONgenerateResponsePacket(functionName, functionCode)
+#### HONgenerateResponsePacket(functionCode, data)
 
 生成响应数据包
 
 - 输入:
-  - functionName (string): 功能名称 ('forceOpen', 'forceHalt', 'normal')
   - functionCode (number): 功能码 (默认98)
+  - data (Buffer|Array(number)): 数据部分
 - 输出:
   - (Buffer): 完整的响应数据Buffer
 
