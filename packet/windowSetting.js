@@ -33,24 +33,13 @@ function generateWindowSettingPacket(functionCode = 13, data) {
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 默认值
-    const defaultData = {
-        powerA: 0.0,
-        powerB: 0.0,
-        factorA: 100.0,
-        factorB: 100.0
-    };
-    
-    // 合并传入数据和默认值
-    const mergedData = { ...defaultData, ...data };
-    
     // 处理窗口功率数据
-    const powerABuffer = floatToBuffer(mergedData.powerA * 10);
-    const powerBBuffer = floatToBuffer(mergedData.powerB * 10);
+    const powerABuffer = floatToBuffer(data.powerA * 10);
+    const powerBBuffer = floatToBuffer(data.powerB * 10);
     
     // 处理窗口系数数据
-    const factorABuffer = floatToBuffer(mergedData.factorA * 1000);
-    const factorBBuffer = floatToBuffer(mergedData.factorB * 1000);
+    const factorABuffer = floatToBuffer(data.factorA * 1000);
+    const factorBBuffer = floatToBuffer(data.factorB * 1000);
     
     // 数据部分
     const dataBuffer = Buffer.concat([

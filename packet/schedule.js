@@ -45,39 +45,20 @@ function generateSchedulePacket(functionCode = 14, data) {
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 默认值
-    const defaultData = {
-        period: 1,
-        mode: 1,
-        power: 0.0,
-        weekSchedule: [
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周一
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周二
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周三
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周四
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周五
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }, // 周六
-            { haltHour: 0, haltMinute: 0, openHour: 5, openMinute: 30 }  // 周日
-        ]
-    };
-    
-    // 合并传入数据和默认值
-    const mergedData = { ...defaultData, ...data };
-    
     // 时段编号
-    const periodBuffer = intToBuffer1(mergedData.period);
+    const periodBuffer = intToBuffer1(data.period);
     
     // 处理模式数据
     const modeBuffer = Buffer.alloc(2);
-    modeBuffer.writeUInt16LE(mergedData.mode, 0);
+    modeBuffer.writeUInt16LE(data.mode, 0);
     
     // 处理功率数据
-    const actualValue = mergedData.power * 10;
+    const actualValue = data.power * 10;
     const powerBuffer = floatToBuffer(actualValue);
     
     // 处理一周的时段安排
     const weekBuffers = [];
-    for (const day of mergedData.weekSchedule) {
+    for (const day of data.weekSchedule) {
         const haltBuffer = Buffer.from([day.haltHour, day.haltMinute]);
         const openBuffer = Buffer.from([day.openHour, day.openMinute]);
         weekBuffers.push(haltBuffer, openBuffer);
@@ -269,4 +250,5 @@ console.log('时段设置响应包:', scheduleResponse.toString('hex')); // 应�
 // 解析时段设置响应包
 const responsePacket = Buffer.from('940155', 'hex');
 const parsedResponse = parseScheduleResponse(responsePacket);
-console.log('解析响应:', parsedResponse); */
+console.log('解析响应:', parsedResponse);
+ */

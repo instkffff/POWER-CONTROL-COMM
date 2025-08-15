@@ -42,28 +42,13 @@ function generateBasicSettingPacket(functionCode = 11, data) {
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
     
-    // 默认值
-    const defaultData = {
-        totalPower: 1000.0,
-        reactivePower: 400.0,
-        activePower: 990.0,
-        inductorPower: 990.0,
-        delay1: 60,
-        delay2: 61,
-        delay3: 62,
-        retry: 4
-    };
-    
-    // 合并传入数据和默认值
-    const mergedData = { ...defaultData, ...data };
-    
     // 处理浮点数数据
     const floatBuffers = [];
     const floatFields = ['totalPower', 'reactivePower', 'activePower', 'inductorPower'];
     
     for (const field of floatFields) {
         // 转换为实际浮点数值并转为buffer
-        const actualValue = mergedData[field] * 10;
+        const actualValue = data[field] * 10;
         const floatBuffer = floatToBuffer(actualValue);
         floatBuffers.push(floatBuffer);
     }
@@ -75,7 +60,7 @@ function generateBasicSettingPacket(functionCode = 11, data) {
     for (const field of intFields) {
         // 转换为2字节小端序buffer
         const intBuffer = Buffer.alloc(2);
-        intBuffer.writeUInt16LE(mergedData[field], 0);
+        intBuffer.writeUInt16LE(data[field], 0);
         intBuffers.push(intBuffer);
     }
     

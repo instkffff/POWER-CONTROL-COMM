@@ -46,23 +46,9 @@ function generateChargingPacket(functionCode = 12, data) {
         'initialKWH', 'usedKWH', 'totalKWH'
     ];
     
-    // 默认值
-    const defaultData = {
-        unknown1: 0.0,
-        unknown2: 0.0,
-        unknown3: 0.0,
-        rechargeKWH: 0.0,
-        initialKWH: 100.0,
-        usedKWH: 0.0,
-        totalKWH: 100.0
-    };
-    
-    // 合并传入数据和默认值
-    const mergedData = { ...defaultData, ...data };
-    
     for (const field of kwhFields) {
         // 转换为实际浮点数值并转为buffer
-        const actualKWH = mergedData[field] * 10;
+        const actualKWH = data[field] * 10;
         const kwhBuffer = floatToBuffer(actualKWH);
         kwhBuffers.push(kwhBuffer);
     }
