@@ -84,6 +84,7 @@ function parsePacket(pkt, operation) {
 
     // 第二步: 获取数据 buffer
     const data = parsedData.data;
+    const id = parsedData.id;
 
     // 第三步: 采用BCD方法将data第一位解析获取functionCode
     // 假设第一位是BCD编码的功能码
@@ -96,7 +97,15 @@ function parsePacket(pkt, operation) {
     }
 
 
-    return func(data);
+    // 第五步: 调用解析函数并返回包含id的结果
+    const result = func(data);
+    if (result) {
+        return {
+            id: id,
+            ...result
+        };
+    }
+    return result;
 
 }
 
