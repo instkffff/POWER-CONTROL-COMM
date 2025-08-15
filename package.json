@@ -10,11 +10,14 @@
   "license": "ISC",
   "author": "NightCandle",
   "main": "index.js",
-  "type":"module",
+  "type": "module",
   "directories": {
     "doc": "doc"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "serialport": "^13.0.0"
   }
 }
