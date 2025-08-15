@@ -86,15 +86,7 @@ function parseReadKWHPacket(packet) {
  * @param {number} data.totalKWH - 总电量 (KWh = float / 10)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateReadKWHResponse(functionCode = 82, data = {
-    unknown1: 0.0,
-    unknown2: 0.0,
-    unknown3: 0.0,
-    rechargeKWH: 0.0,
-    initialKWH: 100.0,
-    usedKWH: 0.0,
-    totalKWH: 100.0
-}) {
+function generateReadKWHResponse(functionCode = 82, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);

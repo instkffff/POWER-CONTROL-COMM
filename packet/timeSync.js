@@ -28,23 +28,15 @@ year 32 35 // 05y ASCII码
  * @param {number} timeData.year - 年 (0-99)
  * @returns {Buffer} - 完整的命令数据Buffer
  */
-function generateTimeSyncPacket(functionCode = 15, timeData = {
-    second: 0,
-    minute: 7,
-    hour: 17,
-    day: 1,
-    month: 8,
-    week: 1,
-    year: 5
-}) {
+function generateTimeSyncPacket(functionCode = 15, timeData) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
-    
+
     // 将时间数据转换为ASCII码格式的Buffer
     const timeBuffers = [];
     const timeFields = ['second', 'minute', 'hour', 'day', 'month', 'week', 'year'];
-    
+
     for (const field of timeFields) {
         const value = timeData[field];
         // 将数字转换为ASCII码格式Buffer
@@ -54,17 +46,17 @@ function generateTimeSyncPacket(functionCode = 15, timeData = {
         const asciiBuffer = Buffer.from([tens, units]);
         timeBuffers.push(asciiBuffer);
     }
-    
+
     // 数据部分
     const dataBuffer = Buffer.concat(timeBuffers);
-    
+
     // 计算长度（字节数）
     const length = dataBuffer.length;
     const lengthBuffer = intToBuffer1(length);
-    
+
     // 组合完整数据包
     const packet = Buffer.concat([funcCodeBuffer, lengthBuffer, dataBuffer]);
-    
+
     return packet;
 }
 
@@ -77,28 +69,28 @@ function parseTimeSyncPacket(packet) {
     if (packet.length < 2) {
         throw new Error('命令数据包长度不足');
     }
-    
+
     // 解析功能码（BCD格式）
     const functionCodeBuffer = packet.slice(0, 1);
     const functionCode = bcdBufferToHexString(functionCodeBuffer);
-    
+
     // 解析长度
     const lengthBuffer = packet.slice(1, 2);
     const length = bufferToInt1(lengthBuffer);
-    
+
     // 验证长度是否匹配
     if (packet.length !== (2 + length)) {
         throw new Error('数据包长度与声明长度不匹配');
     }
-    
+
     // 验证长度是否为14字节 (0x0E)
     if (length !== 14) {
         throw new Error('时间同步命令数据长度必须为14字节');
     }
-    
+
     // 解析数据部分
     const data = packet.slice(2);
-    
+
     // 解析时间字段 (每个字段2字节ASCII码格式)
     const timeFields = [];
     for (let i = 0; i < 7; i++) {
@@ -110,7 +102,7 @@ function parseTimeSyncPacket(packet) {
         const timeValue = tens * 10 + units;
         timeFields.push(timeValue);
     }
-    
+
     return {
         functionCode,
         length,
@@ -140,7 +132,7 @@ function parseTimeSyncPacket(packet) {
  */
 function getCurrentTimeData() {
     const now = new Date();
-    
+
     return {
         second: now.getSeconds(),
         minute: now.getMinutes(),

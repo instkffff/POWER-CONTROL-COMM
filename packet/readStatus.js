@@ -84,13 +84,7 @@ function parseReadStatusPacket(packet) {
  * @param {number} data.power - 功率值 (float / 10)
  * @returns {Buffer} - 完整的响应数据Buffer
  */
-function generateReadStatusResponse(functionCode = 87, data = {
-    statusCode: 1,
-    reasonCode: 0,
-    voltage: 25.3,
-    current: 1.3,
-    power: 12.5
-}) {
+function generateReadStatusResponse(functionCode = 87, data) {
     // 功能码转BCD格式Buffer
     const funcCodeHex = functionCode.toString().padStart(2, '0');
     const funcCodeBuffer = hexStringToBcdBuffer(funcCodeHex);
