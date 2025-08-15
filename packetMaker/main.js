@@ -96,17 +96,16 @@ function parsePacket(pkt, operation) {
         return undefined;
     }
 
-
-    // 第五步: 调用解析函数并返回包含id的结果
+    // 第五步: 调用解析函数并返回包含id但不包含rawData的结果
     const result = func(data);
     if (result) {
+        const { rawData, ...rest } = result;
         return {
             id: id,
-            ...result
+            ...rest
         };
     }
     return result;
-
 }
 
 export { makePacket, parsePacket }
