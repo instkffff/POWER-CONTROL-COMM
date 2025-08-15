@@ -53,7 +53,7 @@ import { packet } from "../packet/main.js";
  * @param {Object} data - 数据对象
  * @returns {Buffer|undefined} 生成的数据包或undefined（如果失败）
  */
-export function makePacket(id, functionCode, operation, data) {
+function makePacket(id, functionCode, operation, data) {
     // 第一步: 调用 FCmap 获取函数路径
     const func = FCmap(functionCode, operation);
     if (!func) {
@@ -78,7 +78,7 @@ export function makePacket(id, functionCode, operation, data) {
  * @param {string} operation - 操作类型 (GP, PP, GRP, PRP)
  * @returns {Object|undefined} 解析后的数据或undefined（如果失败）
  */
-export function parsePacket(pkt, operation) {
+function parsePacket(pkt, operation) {
     // 第一步: 解析数据包
     const parsedData = packet.base[operation](pkt);
 
@@ -99,6 +99,8 @@ export function parsePacket(pkt, operation) {
     return func(data);
 
 }
+
+export { makePacket, parsePacket }
 
 /* // 使用示例
 
