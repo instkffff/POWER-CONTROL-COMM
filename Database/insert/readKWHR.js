@@ -21,7 +21,7 @@ const __dirname = dirname(__filename);
 function updateReadKWHRData(data) {
   try {
     // 创建数据库连接
-    const dbPath = join(__dirname, '..', 'test', 'power-control.db');
+    const dbPath = join(__dirname, '..', 'power-control.db');
     const db = new Database(dbPath);
     
     // 准备更新 ReadKWHR 表的语句

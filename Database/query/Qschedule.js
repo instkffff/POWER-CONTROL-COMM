@@ -19,7 +19,7 @@ const __dirname = dirname(__filename);
 function queryScheduleData(filters = {}) {
   try {
     // 创建数据库连接
-    const dbPath = join(__dirname, '..', 'test', 'power-control.db');
+    const dbPath = join(__dirname, '..', 'power-control.db');
     const db = new Database(dbPath);
     
     // 构建基础SQL查询 (使用引号包围关键字"group")
