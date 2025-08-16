@@ -6,12 +6,6 @@ import { packet } from '../packet/main.js'
 把函数都放入一个对象。
 输入功能码和操作，返回函数调用路径。
 
-operation 包括
-
-解析 GRP PRP 统一为 R
-生成 GP PP 统一为 P
-
-功能码对应列表 
 
 九个模块
 
@@ -64,7 +58,7 @@ GRP PRP 99
 export function FCmap(functionCode, operation) {
   // 功能码到模块的映射
   const functionCodeToModule = {
-    // 生成操作 (GP/PP)
+    // 发送操作 (GP/PP)
     11: 'basicSetting',    // basicSetting
     12: 'charging',        // charging
     18: 'haltOpenNormal',  // haltOpenNormal
@@ -75,7 +69,7 @@ export function FCmap(functionCode, operation) {
     13: 'windowSetting',  // windowSetting
     19: 'unlock',         // unlock
 
-    // 解析操作 (GRP/PRP)
+    // 返回操作 (GRP/PRP)
     91: 'basicSetting',    // basicSetting
     92: 'charging',        // charging
     98: 'haltOpenNormal',  // haltOpenNormal
@@ -89,9 +83,9 @@ export function FCmap(functionCode, operation) {
   // 操作类型映射
   const operationMap = {
     'GP': 'GP',   // 生成命令包
-    'PP': 'PP',   // 生成命令包 (PP统一为GP)
+    'PP': 'PP',   // 解析命令包 
     'GRP': 'GRP', // 生成响应包
-    'PRP': 'PRP'  // 生成响应包 (PRP统一为GRP)
+    'PRP': 'PRP'  // 解析响应包 
   };
 
   // 获取模块名和操作类型
