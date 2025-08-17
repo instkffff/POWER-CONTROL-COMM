@@ -33,7 +33,7 @@ query 处理
 import { query } from '../../Database/main.js';
 
 // 处理查询请求
-export function handleQueryRequest(ws, requestData) {
+function handleQueryRequest(ws, requestData) {
   const { type, requestID, data } = requestData;
   
   try {
@@ -87,6 +87,8 @@ export function handleQueryRequest(ws, requestData) {
 }
 
 // 检查是否为查询请求类型
-export function isQueryRequest(type) {
+function isQueryRequest(type) {
   return ['status', 'basicSetting', 'schedule', 'windowSetting', 'readKWHR'].includes(type);
 }
+
+export { handleQueryRequest, isQueryRequest };
