@@ -83,23 +83,11 @@ const __dirname = dirname(__filename);
 // 存储正在进行的任务
 const activeMissions = new Map();
 
-// 初始化时注册全局事件监听器
-function initializeMissionHandler() {
-  // 监听 rs485Success 事件
-  on(EVENT_TYPES.RS485_SUCCESS, handleRs485Success);
-  
-  // 监听 rs485failed 事件
-  on(EVENT_TYPES.RS485_FAILED, handleRs485Failed);
-  
-  // 监听 missionSuccess 事件
-  on(EVENT_TYPES.MISSION_SUCCESS, handleMissionSuccess);
-}
-
 // 处理RS485成功事件
 function handleRs485Success(deviceData) {
   // 遍历所有活动任务，找到相关的任务并更新进度
   activeMissions.forEach((missionData, requestID) => {
-    const { ws, data, completedDevices } = missionData;
+    const { ws, data, completedDevices, failedDevices = 0 } = missionData;
     const totalDevices = data.IDList.length;
     
     // 检查这个设备是否属于当前任务
@@ -107,8 +95,9 @@ function handleRs485Success(deviceData) {
       // 更新完成设备数
       missionData.completedDevices = completedDevices + 1;
       
-      // 计算执行进度并返回
-      const progress = Math.floor((missionData.completedDevices / totalDevices) * 100);
+      // 计算执行进度并返回（包括成功和失败的设备）
+      const totalProcessed = missionData.completedDevices + missionData.failedDevices;
+      const progress = Math.floor((totalProcessed / totalDevices) * 100);
       const progressResponse = {
         type: 'command',
         requestID: requestID,
@@ -117,7 +106,7 @@ function handleRs485Success(deviceData) {
       sendWebSocketMessage(ws, progressResponse); // 使用统一发送函数
       
       // 检查是否完成所有设备
-      if (missionData.completedDevices >= totalDevices) {
+      if (totalProcessed >= totalDevices) {
         // 任务完成，触发 missionSuccess 事件
         emit(EVENT_TYPES.MISSION_SUCCESS, { requestID, data });
       }
@@ -129,10 +118,14 @@ function handleRs485Success(deviceData) {
 function handleRs485Failed(errorData) {
   // 遍历所有活动任务，找到相关的任务并处理错误
   activeMissions.forEach((missionData, requestID) => {
-    const { ws, data } = missionData;
+    const { ws, data, completedDevices, failedDevices = 0 } = missionData;
+    const totalDevices = data.IDList.length;
     
     // 检查这个设备是否属于当前任务
     if (data.IDList.includes(errorData.deviceId)) {
+      // 更新失败设备数
+      missionData.failedDevices = failedDevices + 1;
+      
       // 返回执行错误和错误的设备ID
       const errorResponse = {
         type: 'command',
@@ -142,14 +135,21 @@ function handleRs485Failed(errorData) {
       };
       sendWebSocketMessage(ws, errorResponse); // 使用统一发送函数
       
-      // 从活动任务中移除
-      activeMissions.delete(requestID);
+      // 计算执行进度并返回（包括成功和失败的设备）
+      const totalProcessed = missionData.completedDevices + missionData.failedDevices;
+      const progress = Math.floor((totalProcessed / totalDevices) * 100);
+      const progressResponse = {
+        type: 'command',
+        requestID: requestID,
+        progress: progress
+      };
+      sendWebSocketMessage(ws, progressResponse); // 使用统一发送函数
       
-      // 清空 missionList
-      const missionListPath = join(__dirname, '..', '..', 'missionList.json');
-      unlink(missionListPath).catch(err => {
-        console.error('清空missionList失败:', err);
-      });
+      // 检查是否完成所有设备
+      if (totalProcessed >= totalDevices) {
+        // 任务完成，触发 missionSuccess 事件
+        emit(EVENT_TYPES.MISSION_SUCCESS, { requestID, data });
+      }
     }
   });
 }
@@ -168,6 +168,11 @@ function handleMissionSuccess(missionData) {
     unlink(missionListPath).catch(err => {
       console.error('清空missionList失败:', err);
     });
+    
+    // 移除事件监听器
+    off(EVENT_TYPES.RS485_SUCCESS, handleRs485Success);
+    off(EVENT_TYPES.RS485_FAILED, handleRs485Failed);
+    off(EVENT_TYPES.MISSION_SUCCESS, handleMissionSuccess);
   }
 }
 
@@ -181,17 +186,23 @@ async function handleCommandRequest(ws, requestData) {
     
     await writeFile(missionListPath, JSON.stringify(data, null, 2));
     
-    // 2. 触发 missionList 事件
+    // 2. 注册事件监听器
+    on(EVENT_TYPES.RS485_SUCCESS, handleRs485Success);
+    on(EVENT_TYPES.RS485_FAILED, handleRs485Failed);
+    on(EVENT_TYPES.MISSION_SUCCESS, handleMissionSuccess);
+    
+    // 3. 触发 missionList 事件
     emit(EVENT_TYPES.MISSION_LIST, data);
     
-    // 3. 将任务添加到活动任务列表
+    // 4. 将任务添加到活动任务列表
     activeMissions.set(requestID, {
       ws: ws,
       data: data,
-      completedDevices: 0
+      completedDevices: 0,
+      failedDevices: 0
     });
     
-    // 4. 返回 success
+    // 5. 返回 success
     const successResponse = {
       type: 'command',
       requestID: requestID,
@@ -210,8 +221,5 @@ async function handleCommandRequest(ws, requestData) {
     throw error;
   }
 }
-
-// 初始化任务处理器
-initializeMissionHandler();
 
 export { handleCommandRequest };
