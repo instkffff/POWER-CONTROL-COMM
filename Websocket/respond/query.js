@@ -1,12 +1,9 @@
-
 /* 
 query 处理 
 
 数据API 格式如下
 
 采用 websocket 连接
-
-``` JSON
 
 // 发送状态请求
 
@@ -30,8 +27,6 @@ query 处理
         "jsonArray": []
     }
 }
-
-```
 
 */
 

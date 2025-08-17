@@ -13,6 +13,7 @@ import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { handleQueryRequest, isQueryRequest } from './respond/query.js';
+import { handleCommandRequest } from './request/missionList.js';
 
 // 获取当前文件路径
 const __filename = fileURLToPath(import.meta.url);
@@ -62,7 +63,10 @@ function handleMessage(ws, message) {
     
     switch (data.type) {
       case 'command':
-        handleCommandRequest(ws, data);
+        handleCommandRequest(ws, data)
+          .catch(error => {
+            console.error('处理命令请求时出错:', error);
+          });
         break;
       default:
         ws.send(JSON.stringify({
@@ -76,21 +80,6 @@ function handleMessage(ws, message) {
       error: '消息格式错误'
     }));
   }
-}
-
-// 处理命令请求
-function handleCommandRequest(ws, data) {
-  // TODO: 实现命令请求的具体逻辑
-  console.log('处理命令请求:', data);
-  
-  // 示例响应
-  const response = {
-    type: 'command',
-    requestID: data.requestID,
-    status: 'success'
-  };
-  
-  ws.send(JSON.stringify(response));
 }
 
 // 广播消息给所有连接的客户端
