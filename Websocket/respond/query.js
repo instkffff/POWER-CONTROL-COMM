@@ -31,6 +31,7 @@ query 处理
 */
 
 import { query } from '../../Database/main.js';
+import { sendWebSocketMessage } from '../main.js'; // 导入统一发送函数
 
 // 处理查询请求
 function handleQueryRequest(ws, requestData) {
@@ -70,7 +71,7 @@ function handleQueryRequest(ws, requestData) {
     };
     
     // 发送响应
-    ws.send(JSON.stringify(response));
+    sendWebSocketMessage(ws, response); // 使用统一发送函数
     
   } catch (error) {
     console.error('处理查询请求时出错:', error);
@@ -82,7 +83,7 @@ function handleQueryRequest(ws, requestData) {
       error: error.message
     };
     
-    ws.send(JSON.stringify(errorResponse));
+    sendWebSocketMessage(ws, errorResponse); // 使用统一发送函数
   }
 }
 

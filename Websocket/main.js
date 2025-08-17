@@ -45,9 +45,33 @@ async function verifyToken(token) {
 }
 
 // 发送失败时的处理函数（留空供插入具体实现）
-export function handleSendFailure(ws, error, message) {
+function handleSendFailure(ws, error, message) {
   // TODO: 在这里实现发送失败的处理逻辑
   console.error('WebSocket发送失败:', error);
+}
+
+/**
+ * 统一发送消息函数
+ * @param {WebSocket} ws - WebSocket连接
+ * @param {Object} message - 要发送的消息对象
+ * @param {Function} callback - 发送完成回调函数
+ */
+function sendWebSocketMessage(ws, message, callback) {
+  try {
+    const messageString = JSON.stringify(message);
+    ws.send(messageString);
+    
+    if (callback && typeof callback === 'function') {
+      callback(null);
+    }
+  } catch (error) {
+    console.error('WebSocket发送失败:', error);
+    handleSendFailure(ws, error, message);
+    
+    if (callback && typeof callback === 'function') {
+      callback(error);
+    }
+  }
 }
 
 // 处理接收到的消息
@@ -69,32 +93,17 @@ function handleMessage(ws, message) {
           });
         break;
       default:
-        ws.send(JSON.stringify({
+        sendWebSocketMessage(ws, {
           error: '未知的消息类型',
           received: data
-        }));
+        });
     }
   } catch (error) {
     console.error('处理消息时出错:', error);
-    ws.send(JSON.stringify({
+    sendWebSocketMessage(ws, {
       error: '消息格式错误'
-    }));
+    });
   }
-}
-
-// 广播消息给所有连接的客户端
-export function broadcast(message, predicate = () => true) {
-  const msg = typeof message === 'string' ? message : JSON.stringify(message);
-  
-  clients.forEach((clientData, ws) => {
-    if (ws.readyState === WebSocket.OPEN && predicate(ws, clientData)) {
-      try {
-        ws.send(msg);
-      } catch (error) {
-        handleSendFailure(ws, error, msg);
-      }
-    }
-  });
 }
 
 // WebSocket连接处理
@@ -132,11 +141,11 @@ wss.on('connection', async (ws, req) => {
   });
   
   // 发送连接成功的消息
-  ws.send(JSON.stringify({
+  sendWebSocketMessage(ws, {
     type: 'connection',
     status: 'success',
     message: '连接已建立'
-  }));
+  });
 });
 
 // 监听服务器错误
@@ -147,4 +156,4 @@ wss.on('error', (error) => {
 console.log('WebSocket服务器运行在端口:' + port);
 
 // 导出供其他模块使用
-export { wss };
+export { wss, sendWebSocketMessage, handleSendFailure };

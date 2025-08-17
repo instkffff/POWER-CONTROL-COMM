@@ -74,6 +74,7 @@ import { writeFile, unlink } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { emit, on, off, EVENT_TYPES } from '../eventList.js';
+import { sendWebSocketMessage } from '../main.js'; // 导入统一发送函数
 
 // 获取当前文件路径
 const __filename = fileURLToPath(import.meta.url);
@@ -113,7 +114,7 @@ function handleRs485Success(deviceData) {
         requestID: requestID,
         progress: progress
       };
-      ws.send(JSON.stringify(progressResponse));
+      sendWebSocketMessage(ws, progressResponse); // 使用统一发送函数
       
       // 检查是否完成所有设备
       if (missionData.completedDevices >= totalDevices) {
@@ -139,7 +140,7 @@ function handleRs485Failed(errorData) {
         status: 'error',
         deviceID: errorData.deviceId
       };
-      ws.send(JSON.stringify(errorResponse));
+      sendWebSocketMessage(ws, errorResponse); // 使用统一发送函数
       
       // 从活动任务中移除
       activeMissions.delete(requestID);
@@ -196,7 +197,7 @@ async function handleCommandRequest(ws, requestData) {
       requestID: requestID,
       status: 'success'
     };
-    ws.send(JSON.stringify(successResponse));
+    sendWebSocketMessage(ws, successResponse); // 使用统一发送函数
   } catch (error) {
     console.error('处理命令请求失败:', error);
     const errorResponse = {
@@ -205,7 +206,7 @@ async function handleCommandRequest(ws, requestData) {
       status: 'error',
       message: '任务创建失败'
     };
-    ws.send(JSON.stringify(errorResponse));
+    sendWebSocketMessage(ws, errorResponse); // 使用统一发送函数
     throw error;
   }
 }
