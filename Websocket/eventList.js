@@ -107,8 +107,7 @@ on(EVENT_TYPES.MISSION_SUCCESS, handleMissionSuccess);
 console.log('=== 触发RS485成功事件 ===');
 emit(EVENT_TYPES.RS485_SUCCESS, { 
   deviceId: '801310', 
-  result: 'success',
-  data: 'some response data'
+  result: 'success'
 });
 
 // 触发RS485失败事件
