@@ -16,7 +16,8 @@ wss.on('error', (error) => {
 // 启动串口服务
 startSerialService();
 
-/* {
+/* 
+{
   "type": "status",
   "requestID": "12345",
   "data": {
@@ -25,7 +26,8 @@ startSerialService();
     "groupList": [1, 2],
     "roomIDList": [1001, 1002, 1003]
   }
-} */
+} 
+*/
 
 /* {
   "type": "command",

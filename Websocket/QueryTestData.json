@@ -1,0 +1,127 @@
+[
+  {
+    "name": "StatusQuery",
+    "data": {
+      "type": "status",
+      "requestID": "12345",
+      "data": {
+        "deviceIDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "levelList": [
+          1
+        ],
+        "groupList": [
+          1
+        ],
+        "roomIDList": []
+      }
+    }
+  },
+  {
+    "name": "BasicSettingQuery",
+    "data": {
+      "type": "basicSetting",
+      "requestID": "12345",
+      "data": {
+        "deviceIDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "levelList": [
+          1
+        ],
+        "groupList": [
+          1
+        ],
+        "roomIDList": []
+      }
+    }
+  },
+  {
+    "name": "ScheduleQuery",
+    "data": {
+      "type": "schedule",
+      "requestID": "12345",
+      "data": {
+        "deviceIDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "levelList": [
+          1
+        ],
+        "groupList": [
+          1
+        ],
+        "roomIDList": []
+      }
+    }
+  },
+  {
+    "name": "WindowSettingQuery",
+    "data": {
+      "type": "windowSetting",
+      "requestID": "12345",
+      "data": {
+        "deviceIDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "levelList": [
+          1
+        ],
+        "groupList": [
+          1
+        ],
+        "roomIDList": []
+      }
+    }
+  },
+  {
+    "name": "ReadKWHRQuery",
+    "data": {
+      "type": "readKWHR",
+      "requestID": "12345",
+      "data": {
+        "deviceIDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "levelList": [
+          1
+        ],
+        "groupList": [
+          1
+        ],
+        "roomIDList": []
+      }
+    }
+  }
+]
