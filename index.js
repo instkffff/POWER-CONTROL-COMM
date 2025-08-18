@@ -59,3 +59,15 @@ startSerialService();
     "data": {}
   }
 } */
+
+/* {
+  "type": "command",
+  "requestID": "12345",
+  "data": {
+    "IDList": [
+      801001,801002,801003,801004,801005,801006,801007
+    ],
+    "FunctionCode": 15,
+    "data": {}
+  }
+} */

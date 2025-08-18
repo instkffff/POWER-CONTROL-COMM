@@ -4,6 +4,8 @@ import { query, update } from '../Database/main.js'
 import { sendCommand, setResponseTimeout } from './communicate/command.js'
 import { syncTime, setSyncTimeout } from './communicate/syncTime.js'
 import { on, emit, EVENT_TYPES } from '../Websocket/eventList.js'
+import { packet } from '../packet/main.js'
+import { COMMlog } from '../Log/main.js'
 
 // 将监听逻辑封装为函数
 const startSerialService = () => {
@@ -52,13 +54,25 @@ const startSerialService = () => {
           // 处理 function code 为 15 的情况，使用 syncTime 发送命令
           if (FunctionCode === 15) {
             // 构造数据包
-            const packetBuffer = makePacket(deviceId, FunctionCode, 'GP', data);
+            const timeData = packet.timeSync.GTD();
+            const packetBuffer = makePacket(deviceId, FunctionCode, 'GP', timeData);
+            
+            // 记录发送的buffer
+            await COMMlog(packetBuffer);
+            
             // 使用 syncTime 发送，不需要等待响应
             await syncTime(packetBuffer, deviceId, retryTimes);
           } else {
             // 其他功能码使用 sendCommand 发送并等待响应
             const packetBuffer = makePacket(801310, FunctionCode, 'GP', data);
+            
+            // 记录发送的buffer
+            await COMMlog(packetBuffer);
+            
             const responseBuffer = await sendCommand(packetBuffer, deviceId, retryTimes);
+            
+            // 记录返回的buffer
+            await COMMlog(responseBuffer);
             
             // 解析响应
             const parsedResponse = parsePacket(responseBuffer, 'PRP');
