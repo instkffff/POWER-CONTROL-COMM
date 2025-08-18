@@ -8,7 +8,8 @@ import { packet } from '../packet/main.js'
 import { COMMlog } from '../Log/main.js'
 
 // 将监听逻辑封装为函数
-const startSerialService = () => {
+// 添加 test 和 testid 参数
+const startSerialService = (test = false, testid = 801310) => {
   // 监听 missionList 事件
   on(EVENT_TYPES.MISSION_LIST, async (missionData) => {
     try {
@@ -55,7 +56,9 @@ const startSerialService = () => {
           if (FunctionCode === 15) {
             // 构造数据包
             const timeData = packet.timeSync.GTD();
-            const packetBuffer = makePacket(deviceId, FunctionCode, 'GP', timeData);
+            // 根据测试模式决定使用的设备ID
+            const packetDeviceId = test ? testid : deviceId;
+            const packetBuffer = makePacket(packetDeviceId, FunctionCode, 'GP', timeData);
             
             // 记录发送的buffer
             await COMMlog(packetBuffer);
@@ -64,7 +67,9 @@ const startSerialService = () => {
             await syncTime(packetBuffer, deviceId, retryTimes);
           } else {
             // 其他功能码使用 sendCommand 发送并等待响应
-            const packetBuffer = makePacket(801310, FunctionCode, 'GP', data);
+            // 根据测试模式决定使用的设备ID
+            const packetDeviceId = test ? testid : deviceId;
+            const packetBuffer = makePacket(packetDeviceId, FunctionCode, 'GP', data);
             
             // 记录发送的buffer
             await COMMlog(packetBuffer);

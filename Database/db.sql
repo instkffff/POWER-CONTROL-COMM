@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS "windowSetting" (
 
 CREATE TABLE IF NOT EXISTS "schedule" (
     "deviceID" INTEGER NOT NULL UNIQUE,
-    "period" INTEGER NOT NULL DEFAULT 0,
-    "mode" INTEGER NOT NULL DEFAULT 0,
-    "power" REAL NOT NULL DEFAULT 0.0,
+    "period" TEXT NOT NULL,
+    "mode" TEXT NOT NULL,
+    "power" TEXT NOT NULL,
     "weekSchedule" TEXT NOT NULL,
     PRIMARY KEY("deviceID"),
     FOREIGN KEY ("deviceID") REFERENCES "index"("deviceID")
