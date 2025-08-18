@@ -1,0 +1,300 @@
+[
+  {
+    "name": "BasicSetting",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 11,
+        "data": {
+          "totalPower": 1000.0,
+          "reactivePower": 400.0,
+          "activePower": 990.0,
+          "inductorPower": 990.0,
+          "delay1": 60,
+          "delay2": 60,
+          "delay3": 60,
+          "retry": 4
+        }
+      }
+    }
+  },
+  {
+    "name": "Charging",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 12,
+        "data": {
+          "unknown1": 0.0,
+          "unknown2": 0.0,
+          "unknown3": 0.0,
+          "rechargeKWH": 100.0,
+          "initialKWH": 100.0,
+          "usedKWH": 0.0,
+          "totalKWH": 200.0
+        }
+      }
+    }
+  },
+  {
+    "name": "ForceOpen",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 18,
+        "data": {
+          "hex": "5555"
+        }
+      }
+    }
+  },
+  {
+    "name": "ForceHalt",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 18,
+        "data": {
+          "hex": "AAAA"
+        }
+      }
+    }
+  },
+  {
+    "name": "Normal",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 18,
+        "data": {
+          "hex": "BBBB"
+        }
+      }
+    }
+  },
+  {
+    "name": "ReadKWH",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 2,
+        "data": {}
+      }
+    }
+  },
+  {
+    "name": "ReadStatus",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 7,
+        "data": {}
+      }
+    }
+  },
+  {
+    "name": "Schedule",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 14,
+        "data": {
+          "period": 1,
+          "mode": 1,
+          "power": 0.0,
+          "weekSchedule": [
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            },
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            },
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            },
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            },
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            },
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            },
+            {
+              "haltHour": 0,
+              "haltMinute": 0,
+              "openHour": 7,
+              "openMinute": 30
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "TimeSync",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 15,
+        "data": {}
+      }
+    }
+  },
+  {
+    "name": "Unlock",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 19,
+        "data": {
+          "hex": "AAAA"
+        }
+      }
+    }
+  },
+  {
+    "name": "WindowSetting",
+    "data": {
+      "type": "command",
+      "requestID": "12345",
+      "data": {
+        "IDList": [
+          801001,
+          801002,
+          801003,
+          801004,
+          801005,
+          801006,
+          801007
+        ],
+        "FunctionCode": 13,
+        "data": {
+          "powerA": 0.0,
+          "powerB": 0.0,
+          "factorA": 100.0,
+          "factorB": 100.0
+        }
+      }
+    }
+  }
+]

@@ -9,7 +9,7 @@ import { COMMlog } from '../Log/main.js'
 
 // 将监听逻辑封装为函数
 // 添加 test 和 testid 参数
-const startSerialService = (test = false, testid = 801310) => {
+const startSerialService = (test = true, testid = 801310) => {
   // 监听 missionList 事件
   on(EVENT_TYPES.MISSION_LIST, async (missionData) => {
     try {
