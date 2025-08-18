@@ -5,94 +5,6 @@ import { sendCommand, setResponseTimeout } from './communicate/command.js'
 import { syncTime, setSyncTimeout } from './communicate/syncTime.js'
 import { on, emit, EVENT_TYPES } from '../Websocket/eventList.js'
 
-/* 
-操作流程 
-
-命令的格式 和 update 的格式 可能有差异 只提取关键词构建 update 示例格式传给 update 即可
-
-1. 监听 missionList emit 事件
-2. 接到 missionList 后 读取 missionList.json 并打开串口
-3. 遍历 missionList.json 解析为单条命令
-4. 单条命令的 functionCode 
-为 
-11 basicSetting
-14 schedule
-13 windowSetting
-
-则调用 update
-
-update.basicSetting({ 
-  id: 801000, 
-  totalPower: 1000, 
-  reactivePower: 400, 
-  activePower: 990, 
-  inductorPower: 990, 
-  delay1: 60, 
-  delay2: 60, 
-  delay3: 60, 
-  retry: 4 
-});
-
-update.schedule({
-  id: 801000,
-  period: 1,
-  mode: 1,
-  power: 0,
-  weekSchedule: [
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30},
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30},
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30},
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30},
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30},
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30},
-    {"haltHour":0,"haltMinute":0,"openHour":7,"openMinute":30}
-  ]
-});
-
-update.windowSetting({
-  id: 801000,
-  powerA: 0,
-  powerB: 0,
-  factorA: 100,
-  factorB: 100
-});
-
-5. 将命令通过 makePacket 制作为 Buffer 传给 sendCommand
-
-6. 等待 sendCommand 的返回结果
-
-7. 使用 parsePacket 解析返回结果
-
-8. 根据 parsePacket 的结果
-如果functionCode
-为
-
-87 status
-
-update.status({ 
-  id: 801000, 
-  statusCode: 1, 
-  reasonCode: 0, 
-  voltage: 220.5, 
-  current: 1.2, 
-  power: 200.0 
-});
-
-82 readKWHR
-
-update.readKWHR({
-  id: 801000,
-  rechargeKWH: 0,
-  initialKWH: 100,
-  usedKWH: 10,
-  totalKWH: 90
-});
-
-9. functionList.json 所有 deviceID 遍历并发送完后
-emit 'missionSuccess'
-
-*/
-
 // 将监听逻辑封装为函数
 const startSerialService = () => {
   // 监听 missionList 事件
@@ -137,28 +49,49 @@ const startSerialService = () => {
             }
           }
           
-          // 构造数据包 (根据test.js中的用法修正)
-          const packetBuffer = makePacket(801310, FunctionCode, 'GP', data);
-          
-          // 发送命令并等待响应
-          const responseBuffer = await sendCommand(packetBuffer, deviceId, retryTimes);
-          
-          // 解析响应 (根据test.js中的用法修正)
-          const parsedResponse = parsePacket(responseBuffer, 'PRP');
-          
-          // 根据功能码更新数据库
-          if ([82, 87].includes(parsedResponse.functionCode)) {
-            switch (parsedResponse.functionCode) {
-              case 87: // status
-                // 添加deviceId到数据中
-                const statusData = { id: 801003, ...parsedResponse.data };
-                update.status(statusData);
-                break;
-              case 82: // readKWHR
-                // 添加deviceId到数据中
-                const kwhData = { id: 801003, ...parsedResponse.data };
-                update.readKWHR(kwhData);
-                break;
+          // 处理 function code 为 15 的情况，使用 syncTime 发送命令
+          if (FunctionCode === 15) {
+            // 构造数据包
+            const packetBuffer = makePacket(deviceId, FunctionCode, 'GP', data);
+            // 使用 syncTime 发送，不需要等待响应
+            await syncTime(packetBuffer, deviceId, retryTimes);
+          } else {
+            // 其他功能码使用 sendCommand 发送并等待响应
+            const packetBuffer = makePacket(801310, FunctionCode, 'GP', data);
+            const responseBuffer = await sendCommand(packetBuffer, deviceId, retryTimes);
+            
+            // 解析响应
+            const parsedResponse = parsePacket(responseBuffer, 'PRP');
+
+            // 根据功能码更新数据库 (修复字符串与数字比较问题)
+            if (['82', '87'].includes(parsedResponse.functionCode)) {
+              switch (parsedResponse.functionCode) {
+                case '87': // status
+                  // 使用实际的设备ID并只保留模板中定义的字段
+                  const statusData = {
+                    id: deviceId,
+                    statusCode: parsedResponse.statusCode,
+                    reasonCode: parsedResponse.reasonCode,
+                    voltage: parsedResponse.voltage,
+                    current: parsedResponse.current,
+                    power: parsedResponse.power
+                  };
+
+                  update.status(statusData);
+                  break;
+                case '82': // readKWHR
+                  // 使用实际的设备ID并只保留模板中定义的字段
+                  const kwhData = {
+                    id: deviceId,
+                    rechargeKWH: parsedResponse.rechargeKWH,
+                    initialKWH: parsedResponse.initialKWH,
+                    usedKWH: parsedResponse.usedKWH,
+                    totalKWH: parsedResponse.totalKWH
+                  };
+
+                  update.readKWHR(kwhData);
+                  break;
+              }
             }
           }
           
