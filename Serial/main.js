@@ -7,16 +7,64 @@ import { on, emit, EVENT_TYPES } from '../Websocket/eventList.js'
 import { packet } from '../packet/main.js'
 import { COMMlog } from '../Log/main.js'
 
+// 任务队列和状态管理
+let missionQueue = [];
+let isProcessing = false;
+let currentMission = null;
+
 // 将监听逻辑封装为函数
 // 添加 test 和 testid 参数
 const startSerialService = (test = true, testid = 801310) => {
   // 监听 missionList 事件
   on(EVENT_TYPES.MISSION_LIST, async (missionData) => {
-    try {
-      console.log('Received missionList event, processing...' + missionData);
+    console.log('Received missionList event, processing...' + missionData);
+    
+    // 如果正在处理任务，则取消当前任务并用新任务替换
+    if (isProcessing) {
+      console.log('New mission received, cancelling current mission...');
+      // 发送任务失败事件
+      emit(EVENT_TYPES.MISSION_FAILED, { 
+        result: 'failed', 
+        error: 'Cancelled by new mission' 
+      });
       
+      // 清空队列并添加新任务
+      missionQueue = [];
+      currentMission = null;
+    }
+    
+    // 将新任务加入队列
+    missionQueue.push({
+      data: missionData,
+      test: test,
+      testid: testid
+    });
+    
+    // 如果没有在处理任务，则开始处理队列
+    if (!isProcessing) {
+      processMissionQueue();
+    }
+  });
+  
+  console.log('Serial communication service started. Waiting for missionList events...');
+};
+
+// 处理任务队列
+async function processMissionQueue() {
+  if (isProcessing || missionQueue.length === 0) {
+    return;
+  }
+  
+  isProcessing = true;
+  
+  while (missionQueue.length > 0) {
+    // 获取队列中的第一个任务
+    currentMission = missionQueue.shift();
+    const { data: missionData, test, testid } = currentMission;
+    
+    try {
       // 打开串口 - 使用固定的配置: COM5 9600 8 1 none
-      const serialPort = await openSerialPort('COM5', {
+      await openSerialPort('COM5', {
         baudRate: 9600,
         dataBits: 8,
         stopBits: 1,
@@ -29,6 +77,12 @@ const startSerialService = (test = true, testid = 801310) => {
       
       // 遍历所有设备ID，每个ID发送一次命令
       for (const deviceId of missionData.IDList) {
+        // 检查是否有新任务中断当前任务
+        if (missionQueue.length > 0) {
+          console.log('New mission detected, interrupting current mission...');
+          throw new Error('Cancelled by new mission');
+        }
+        
         const { FunctionCode, data, retryTimes = 3 } = missionData;
         
         console.log(`Processing command for device ${deviceId}, functionCode: ${FunctionCode}`);
@@ -144,12 +198,17 @@ const startSerialService = (test = true, testid = 801310) => {
       }
       
       console.error('Error processing mission list:', error);
-      emit(EVENT_TYPES.MISSION_FAILED, { result: 'failed', error: error.message });
+      // 只有在不是被新任务中断的情况下才发送失败事件
+      if (error.message !== 'Cancelled by new mission' || missionQueue.length === 0) {
+        emit(EVENT_TYPES.MISSION_FAILED, { result: 'failed', error: error.message });
+      }
     }
-  });
+  }
   
-  console.log('Serial communication service started. Waiting for missionList events...');
-};
+  // 重置状态
+  isProcessing = false;
+  currentMission = null;
+}
 
 // 导出启动函数
 export { startSerialService };
