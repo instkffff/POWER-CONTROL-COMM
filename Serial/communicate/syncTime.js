@@ -3,7 +3,7 @@
 import { sendPacket } from '../SerialPort.js';
 import { emit, EVENT_TYPES } from '../../Websocket/eventList.js';
 
-let syncTimeout = 1000; // 1秒超时
+let syncTimeout = 500; // 1秒超时
 
 /**
  * 同步时间命令发送（只发送不接收响应）
@@ -17,9 +17,10 @@ const syncTime = async (buffer, deviceId, retryTimes = 3) => {
 
   const sendTimeSync = () => {
     return new Promise(async (resolve, reject) => {
+      let timeout; // 在此作用域声明timeout变量
       try {
         // 设置发送超时计时器
-        const timeout = setTimeout(() => {
+        timeout = setTimeout(() => {
           handleFailure(new Error('Send timeout'));
         }, syncTimeout);
 

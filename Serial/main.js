@@ -139,6 +139,13 @@ async function handleMission(mission) {
  * @param {boolean} test - 测试模式标志。
  * @param {number} testid - 测试设备 ID。
  */
+/**
+ * 处理单个设备的命令逻辑。
+ * @param {number} deviceId - 设备 ID。
+ * @param {object} missionData - 任务数据。
+ * @param {boolean} test - 测试模式标志。
+ * @param {number} testid - 测试设备 ID。
+ */
 async function handleDeviceCommand(deviceId, missionData, test, testid) {
   const { FunctionCode, data, retryTimes = 3 } = missionData;
   const packetDeviceId = test ? testid : deviceId;
@@ -148,17 +155,21 @@ async function handleDeviceCommand(deviceId, missionData, test, testid) {
   // 根据功能码在发送前更新数据库
   await updateDatabaseBeforeSend(deviceId, FunctionCode, data);
 
-  const packetBuffer = makePacket(packetDeviceId, FunctionCode, 'GP', data);
-  await COMMlog(packetBuffer);
-
   // 使用 switch 语句处理不同的功能码
   switch (FunctionCode) {
     case 15: // 时间同步
-      // 时间同步不需要等待响应
-      await syncTime(packetBuffer, deviceId, retryTimes);
+      // 1. 获取时间同步数据
+      const timeData = packet.timeSync.GTD(); 
+      // 2. 构造数据包
+      const timePacketBuffer = makePacket(packetDeviceId, FunctionCode, 'GP', timeData);
+      await COMMlog(timePacketBuffer);
+      // 3. 发送时间同步命令，不依赖传入的data
+      await syncTime(timePacketBuffer, deviceId, retryTimes);
       break;
 
     default: // 其他功能码，需要等待响应
+      const packetBuffer = makePacket(packetDeviceId, FunctionCode, 'GP', data);
+      await COMMlog(packetBuffer);
       const responseBuffer = await sendCommand(packetBuffer, deviceId, retryTimes);
       await COMMlog(responseBuffer);
       const parsedResponse = parsePacket(responseBuffer, 'PRP');
