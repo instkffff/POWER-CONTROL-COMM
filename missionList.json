@@ -1,0 +1,22 @@
+{
+  "IDList": [
+    801001,
+    801002,
+    801003,
+    801004,
+    801005,
+    801006,
+    801007
+  ],
+  "FunctionCode": 11,
+  "data": {
+    "totalPower": 1000,
+    "reactivePower": 400,
+    "activePower": 990,
+    "inductorPower": 990,
+    "delay1": 60,
+    "delay2": 60,
+    "delay3": 60,
+    "retry": 4
+  }
+}

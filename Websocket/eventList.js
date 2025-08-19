@@ -58,7 +58,8 @@ const EVENT_TYPES = {
   RS485_SUCCESS: 'rs485Success',
   RS485_FAILED: 'rs485failed',
   MISSION_LIST: 'missionList',
-  MISSION_SUCCESS: 'missionSuccess'
+  MISSION_SUCCESS: 'missionSuccess',
+  MISSION_FAILED: 'missionFailed'
 };
 
 // 导出模块
