@@ -1,5 +1,5 @@
 import { openSerialPort, closeSerialPort, sendPacket, onPacketReceived, autoReconnect } from '../SerialPort.js'
-import { emit, on, off, EVENT_TYPES } from '../../Websocket/eventList.js';
+import { EVENT_TYPES, on, emit, off } from '../../Websocket/eventList.js'  
 
 /* 
 功能说明 
@@ -63,9 +63,8 @@ let responseTimeout = 500; // 1秒超时
  * @param {number} retryTimes - 重试次数
  * @returns {Promise<Buffer>} 接收到的响应数据
  */
-const sendCommand = async (buffer, deviceId, retryTimes = 3) => {
+const sendCommand = async (requestID, progress, buffer, deviceId, retryTimes) => {
   let retries = 0;
-
   const sendAndReceive = () => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -84,8 +83,10 @@ const sendCommand = async (buffer, deviceId, retryTimes = 3) => {
           
           // 触发成功事件
           emit(EVENT_TYPES.RS485_SUCCESS, {
+            RequestID: requestID,
             deviceId: deviceId,
-            result: 'success'
+            result: 'success',
+            progress: progress
           });
           
           resolve(data);
@@ -105,8 +106,10 @@ const sendCommand = async (buffer, deviceId, retryTimes = 3) => {
           } else {
             // 触发失败事件
             emit(EVENT_TYPES.RS485_FAILED, {
+              RequestID: requestID,
               deviceId: deviceId,
-              result: 'failed'
+              result: 'failed',
+              progress: progress
             });
             
             reject(error);
