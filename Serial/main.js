@@ -2,11 +2,14 @@ import { openSerialPort, closeSerialPort } from './SerialPort.js';
 import { on, emit, EVENT_TYPES } from '../Websocket/eventList.js';
 import { handleDeviceCommand } from './commandHandle.js';
 
-const flag = {
-    // 强制停止标志
-    forceStop: false,
-    // 当前正在执行的任务
-    currentMission: null,
+// 全局状态管理
+const state = {
+    // 任务队列
+    missionQueue: [],
+    // 标记是否正在处理任务
+    isProcessing: false,
+    // 标记任务是否被强制停止
+    isForceStopped: false,
 };
 
 const serialConfig = {
@@ -16,26 +19,26 @@ const serialConfig = {
     parity: 'none',
 };
 
-// 任务队列
-let missionQueue = [];
-let isProcessing = false;
-
+// 添加事件监听器
 function addEventListeners() {
-    on(EVENT_TYPES.MISSION_SEND, mission);
-    on(EVENT_TYPES.MISSION_STOP, missionStop);
+    on(EVENT_TYPES.MISSION_SEND, queueMission);
+    on(EVENT_TYPES.MISSION_STOP, cancelCurrentMission);
 }
 
-async function mission(missionList) {
-    console.log('mission receive');
+/**
+ * 接收新任务，并加入队列。如果正在处理任务，则先取消当前任务。
+ */
+async function queueMission(newMission) {
+    console.log('Received new mission');
 
-    // 如果正在处理任务，则先设置强制停止标志
-    if (isProcessing) {
-        console.log('收到新任务，取消当前任务...');
-        flag.forceStop = true;
-        // 等待当前任务处理完成
+    // 如果当前有任务正在执行，则先将其标记为取消
+    if (state.isProcessing) {
+        console.log('正在处理现有任务，将取消它并处理新任务...');
+        state.isForceStopped = true;
+        // 等待当前任务结束
         await new Promise(resolve => {
             const checkInterval = setInterval(() => {
-                if (!isProcessing) {
+                if (!state.isProcessing) {
                     clearInterval(checkInterval);
                     resolve();
                 }
@@ -43,115 +46,118 @@ async function mission(missionList) {
         });
     }
 
-    // 将新任务加入队列
-    missionQueue.push(missionList);
+    // 将新任务添加到队列
+    state.missionQueue.push(newMission);
 
-    // 如果没有在处理任务，则开始处理队列
-    if (!isProcessing) {
-        processMissionQueue();
+    // 如果队列没有在处理，就启动它
+    if (!state.isProcessing) {
+        processNextMission();
     }
 }
 
-function missionStop() {
-    console.log('missionStop');
-    // 设置强制停止标志
-    flag.forceStop = true;
+/**
+ * 强制取消当前正在处理的任务。
+ */
+function cancelCurrentMission() {
+    console.log('Received mission stop command');
+    // 设置取消标志，让正在执行的任务停止
+    state.isForceStopped = true;
     
-    const RequestID = flag.currentMission.requestID;
+    // 发送任务失败通知
+    const currentMission = state.missionQueue[0];
+    const requestId = currentMission ? currentMission.requestID : null;
     emit(EVENT_TYPES.MISSION_FAILED, {
         type: 'command',
-        RequestID: RequestID,
+        RequestID: requestId,
         status: 'failed',
-        message: '任务被取消',
+        message: '任务被用户取消',
     });
 }
 
 /**
- * 顺序处理任务队列
+ * 顺序处理任务队列中的下一个任务。
  */
-async function processMissionQueue() {
-    if (isProcessing || missionQueue.length === 0) {
+async function processNextMission() {
+    // 检查是否有任务需要处理
+    if (state.missionQueue.length === 0) {
         return;
     }
 
-    isProcessing = true;
-    const currentMission = missionQueue.shift();
+    // 标记为正在处理
+    state.isProcessing = true;
+    state.isForceStopped = false;
 
-    // 重置停止标志
-    flag.forceStop = false;
-    flag.currentMission = currentMission;
+    // 从队列中取出当前任务
+    const currentMission = state.missionQueue.shift();
+    const IDList = currentMission.data.IDList;
+    const totalDevices = IDList.length;
+    const requestID = currentMission.requestID;
 
+    let successCount = 0;
+    let failCount = 0;
     let isCanceled = false;
 
     try {
         // 打开串口
         await openSerialPort('COM5', serialConfig);
 
-        const IDList = currentMission.data.IDList;
-        const IDListLength = IDList.length;
-        let requestID = currentMission.requestID;
-
-        // 任务计数器
-        let successCount = 0;
-        let failCount = 0;
-
-        // 处理每个设备
-        for (let i = 0; i < IDListLength; i++) {
-            // 检查是否需要强制停止
-            if (flag.forceStop) {
+        // 遍历并处理每个设备
+        for (let i = 0; i < totalDevices; i++) {
+            // 检查是否已取消
+            if (state.isForceStopped) {
                 isCanceled = true;
                 throw new Error('任务被强制停止');
             }
 
             const deviceId = IDList[i];
-            const progress = Math.round(((i + 1) / IDListLength) * 100);
+            const progress = Math.round(((i + 1) / totalDevices) * 100);
 
             try {
-                // handleDeviceCommand 函数应在此处被调用
-                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, false, 801310);
-                console.log(`正在处理设备 ${deviceId}, 进度: ${progress}%`);
-                await new Promise(resolve => setTimeout(resolve, 500)); // 模拟异步操作
+                // 模拟处理设备命令
+                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, true, 801310);
+                console.log(`处理设备 ${deviceId} 成功, 进度: ${progress}%`);
                 successCount++;
             } catch (error) {
                 console.error(`处理设备 ${deviceId} 失败:`, error);
                 failCount++;
             }
         }
-
-        // 任务完成，发送成功事件
+        
+        // 任务成功完成
         emit(EVENT_TYPES.MISSION_SUCCESS, {
             type: 'command',
             RequestID: requestID,
             status: 'success',
             message: '任务完成',
-            successCount: successCount,
-            failCount: failCount,
+            successCount,
+            failCount,
         });
 
     } catch (error) {
-        console.error('处理任务时出错:', error);
+        console.error('任务处理失败:', error.message);
+        // 如果不是被主动取消，则发送失败通知
         if (!isCanceled) {
-            const RequestID = flag.currentMission ? flag.currentMission.requestID : null;
             emit(EVENT_TYPES.MISSION_FAILED, {
                 type: 'command',
-                RequestID: RequestID,
+                RequestID: requestID,
                 status: 'failed',
                 message: error.message,
             });
         }
     } finally {
+        // 无论成功或失败，都进行清理工作
         try {
             await closeSerialPort();
         } catch (closeError) {
-            console.error('关闭串口时出错:', closeError);
+            console.error('关闭串口失败:', closeError.message);
         }
 
-        isProcessing = false;
-        flag.currentMission = null;
+        // 重置状态
+        state.isProcessing = false;
 
-        // 如果队列中还有任务，则继续处理下一个
-        if (missionQueue.length > 0) {
-            processMissionQueue();
+        // 继续处理下一个任务（如果存在）
+        if (state.missionQueue.length > 0) {
+            processNextMission();
         }
     }
 }
@@ -160,5 +166,4 @@ function startSerialService() {
     addEventListeners();
 }
 
-// 导出启动函数
 export { startSerialService };

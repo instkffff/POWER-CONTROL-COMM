@@ -7,7 +7,8 @@ async function handleCommandRequest(ws, requestData) {
 
   flag.ws = ws;
   flag.requestData = requestData;
-  await addMission(requestData);
+  /* // missionLog
+  await addMission(requestData); */
 
   if (flag.queen === 1) {
     // 先设置标志位再发送停止命令
