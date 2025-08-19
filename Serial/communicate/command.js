@@ -54,7 +54,7 @@ missionSuccess
 
 */
 
-let responseTimeout = 1000; // 1秒超时
+let responseTimeout = 500; // 1秒超时
 
 /**
  * 发送命令并等待响应

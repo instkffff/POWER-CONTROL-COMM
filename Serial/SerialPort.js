@@ -15,7 +15,7 @@ import { SerialPort } from 'serialport';
 let serialPortInstance = null;
 let isConnected = false;
 let reconnectAttempts = 0;
-let maxReconnectAttempts = Infinity; // 设置为无穷大，实现无限重连
+let maxReconnectAttempts = 3; // 设置为无穷大，实现无限重连
 let reconnectDelay = 1000; // 1秒
 
 /**
