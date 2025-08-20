@@ -83,7 +83,8 @@ start
     "type": "command",
     "RequestID": "12345",
     "status": "start",
-    "message": "任务开始"
+    "message": "任务开始",
+    "code": 0
 }
 
 progress success
@@ -93,7 +94,8 @@ progress success
     "RequestID":"12345",
     "deviceId":801001,
     "status":"success",
-    "progress":14
+    "progress":14,
+    "code": 1
 }
 
 progress failed
@@ -103,7 +105,8 @@ progress failed
     "RequestID":"12345",
     "deviceId":801001,
     "status":"failed",
-    "progress":14
+    "progress":14,
+    "code": 1
 }
 
 mission cancel by new mission
@@ -112,7 +115,8 @@ mission cancel by new mission
     "type":"command",
     "RequestID":"12345",
     "status":"failed",
-    "message":"任务被用户取消"
+    "message":"任务被用户取消",
+    "code": 2
 }
 
 finish
@@ -123,7 +127,8 @@ finish
     "status": "finished",
     "message": "任务完成",
     "successCount": 7,
-    "failCount": 0
+    "failCount": 0,
+    "code": 3
 }
 
 COM port error
@@ -132,7 +137,8 @@ COM port error
     "type":"command",
     "RequestID":"12345",
     "status":"failed",
-    "message":"Opening COM5: File not found"
+    "message":"Opening COM5: File not found",
+    "code": 4
 }
 
 ```

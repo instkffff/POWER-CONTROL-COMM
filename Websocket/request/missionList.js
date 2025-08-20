@@ -86,7 +86,8 @@ function missionSend(requestData) {
     type: 'command',
     RequestID: requestData.requestID,
     status: 'start',
-    message: '任务开始'
+    message: '任务开始',
+    code: 0
   }
   sendWebSocketMessage(ws, data);
   emit(EVENT_TYPES.MISSION_SEND, requestData);

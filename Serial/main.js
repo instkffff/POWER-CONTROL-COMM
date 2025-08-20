@@ -74,6 +74,7 @@ function cancelCurrentMission() {
         RequestID: requestID,
         status: 'failed',
         message: '任务被用户取消',
+        code: 2
     });
 }
 
@@ -137,6 +138,7 @@ async function processNextMission() {
             message: '任务完成',
             successCount,
             failCount,
+            code: 3
         });
 
     } catch (error) {
@@ -148,6 +150,7 @@ async function processNextMission() {
                 RequestID: requestID,
                 status: 'failed',
                 message: error.message,
+                code: 4
             });
         }
     } finally {

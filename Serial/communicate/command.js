@@ -87,7 +87,8 @@ const sendCommand = async (requestID, progress, buffer, deviceId, retryTimes) =>
             RequestID: requestID,
             deviceId: deviceId,
             status: 'success',
-            progress: progress
+            progress: progress,
+            code: 1
           });
           
           resolve(data);
@@ -111,7 +112,8 @@ const sendCommand = async (requestID, progress, buffer, deviceId, retryTimes) =>
               RequestID: requestID,
               deviceId: deviceId,
               status: 'failed',
-              progress: progress
+              progress: progress,
+              code: 1
             });
             
             reject(error);
