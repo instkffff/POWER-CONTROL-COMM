@@ -1,6 +1,6 @@
 import { createHttpServer } from './Http/main.js';
 import { wss } from './Websocket/main.js';
-import { startSerialService } from './Serial/main.js'; // 导入串口服务
+import { startSerialService } from './Serial/main.js';
 
 const server = createHttpServer();
 
