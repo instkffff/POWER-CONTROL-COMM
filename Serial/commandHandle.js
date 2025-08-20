@@ -18,7 +18,7 @@ import { COMMlog } from '../Log/main.js';
 async function handleDeviceCommand(requestID, progress, deviceId, missionData, test, testid) {
   const { FunctionCode, data } = missionData;
   const packetDeviceId = test ? testid : deviceId;
-  const retryTimes = 3;
+  const retryTimes = 2;
 
   console.log(`正在处理设备 ${deviceId} 的命令，功能码: ${FunctionCode}`);
 

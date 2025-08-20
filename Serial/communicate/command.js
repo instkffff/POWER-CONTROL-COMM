@@ -83,9 +83,10 @@ const sendCommand = async (requestID, progress, buffer, deviceId, retryTimes) =>
           
           // 触发成功事件
           emit(EVENT_TYPES.RS485_SUCCESS, {
+            type: 'command',
             RequestID: requestID,
             deviceId: deviceId,
-            result: 'success',
+            status: 'success',
             progress: progress
           });
           
@@ -102,13 +103,14 @@ const sendCommand = async (requestID, progress, buffer, deviceId, retryTimes) =>
             console.log(`Retry ${retries}/${retryTimes} for device ${deviceId}`);
             setTimeout(() => {
               sendAndReceive().then(resolve).catch(reject);
-            }, 1000); // 1秒后重试
+            }, 500); // 1秒后重试
           } else {
             // 触发失败事件
             emit(EVENT_TYPES.RS485_FAILED, {
+              type: 'command',
               RequestID: requestID,
               deviceId: deviceId,
-              result: 'failed',
+              status: 'failed',
               progress: progress
             });
             

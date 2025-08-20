@@ -10,6 +10,8 @@ const state = {
     isProcessing: false,
     // 标记任务是否被强制停止
     isForceStopped: false,
+    // 新增：用于存储当前正在处理的任务的ID
+    currentMissionID: null, 
 };
 
 const serialConfig = {
@@ -63,12 +65,13 @@ function cancelCurrentMission() {
     // 设置取消标志，让正在执行的任务停止
     state.isForceStopped = true;
     
+    // 使用全局变量来获取当前正在处理的任务ID
+    const requestID = state.currentMissionID;
+
     // 发送任务失败通知
-    const currentMission = state.missionQueue[0];
-    const requestId = currentMission ? currentMission.requestID : null;
     emit(EVENT_TYPES.MISSION_FAILED, {
         type: 'command',
-        RequestID: requestId,
+        RequestID: requestID,
         status: 'failed',
         message: '任务被用户取消',
     });
@@ -92,6 +95,9 @@ async function processNextMission() {
     const IDList = currentMission.data.IDList;
     const totalDevices = IDList.length;
     const requestID = currentMission.requestID;
+    
+    // 将当前任务的ID存入全局状态
+    state.currentMissionID = requestID;
 
     let successCount = 0;
     let failCount = 0;
@@ -114,7 +120,7 @@ async function processNextMission() {
 
             try {
                 // 模拟处理设备命令
-                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, true, 801310);
+                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, false, 801310);
                 console.log(`处理设备 ${deviceId} 成功, 进度: ${progress}%`);
                 successCount++;
             } catch (error) {
@@ -127,7 +133,7 @@ async function processNextMission() {
         emit(EVENT_TYPES.MISSION_SUCCESS, {
             type: 'command',
             RequestID: requestID,
-            status: 'success',
+            status: 'finished',
             message: '任务完成',
             successCount,
             failCount,
@@ -154,6 +160,8 @@ async function processNextMission() {
 
         // 重置状态
         state.isProcessing = false;
+        // 清除当前任务ID
+        state.currentMissionID = null; 
 
         // 继续处理下一个任务（如果存在）
         if (state.missionQueue.length > 0) {
