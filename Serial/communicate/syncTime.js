@@ -7,12 +7,14 @@ let syncTimeout = 500; // 1秒超时
 
 /**
  * 同步时间命令发送（只发送不接收响应）
+ * @param {string} requestID - 请求ID
+ * @param {number} progress - 进度值
  * @param {Buffer} buffer - 要发送的时间同步数据
  * @param {string} deviceId - 设备ID
  * @param {number} retryTimes - 重试次数
  * @returns {Promise<void>}
  */
-const syncTime = async (buffer, deviceId, retryTimes = 3) => {
+const syncTime = async (requestID, progress, buffer, deviceId, retryTimes) => {
   let retries = 0;
 
   const sendTimeSync = () => {
@@ -32,8 +34,11 @@ const syncTime = async (buffer, deviceId, retryTimes = 3) => {
         
         // 触发成功事件
         emit(EVENT_TYPES.RS485_SUCCESS, {
+          type: 'command',
+          RequestID: requestID,
           deviceId: deviceId,
-          result: 'success'
+          result: 'success',
+          progress: progress
         });
         
         // 等待10ms后再resolve
@@ -60,8 +65,11 @@ const syncTime = async (buffer, deviceId, retryTimes = 3) => {
       } else {
         // 触发失败事件
         emit(EVENT_TYPES.RS485_FAILED, {
+          type: 'command',
+          RequestID: requestID,
           deviceId: deviceId,
-          result: 'failed'
+          result: 'failed',
+          progress: progress
         });
         
         reject(error);

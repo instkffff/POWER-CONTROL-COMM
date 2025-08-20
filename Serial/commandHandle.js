@@ -34,7 +34,7 @@ async function handleDeviceCommand(requestID, progress, deviceId, missionData, t
       const timePacketBuffer = makePacket(packetDeviceId, FunctionCode, 'GP', timeData);
       await COMMlog(timePacketBuffer);
       // 3. 发送时间同步命令，不依赖传入的data
-      await syncTime(timePacketBuffer, deviceId, retryTimes);
+      await syncTime(requestID, progress, timePacketBuffer, deviceId, retryTimes);
       break;
 
     default: // 其他功能码，需要等待响应
