@@ -121,7 +121,7 @@ async function processNextMission() {
 
             try {
                 // 模拟处理设备命令
-                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, false, 801310);
+                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, true, 801310);
                 console.log(`处理设备 ${deviceId} 成功, 进度: ${progress}%`);
                 successCount++;
             } catch (error) {

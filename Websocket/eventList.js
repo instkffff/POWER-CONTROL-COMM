@@ -37,7 +37,8 @@ const EVENT_TYPES = {
   MISSION_SEND: 'missionSend',
   MISSION_SUCCESS: 'missionSuccess',
   MISSION_FAILED: 'missionFailed',
-  MISSION_STOP: 'missionStop'
+  MISSION_STOP: 'missionStop',
+  CRON_STOP: 'cronStop'
 };
 
 // 导出模块

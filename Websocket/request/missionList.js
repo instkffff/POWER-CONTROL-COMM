@@ -1,6 +1,6 @@
 import { emit, on, off, EVENT_TYPES } from '../eventList.js';
 import { sendWebSocketMessage } from '../main.js';
-import { addMission } from './missionLog.js'
+// import { addMission } from './missionLog.js'
 
 const flag = {};
 async function handleCommandRequest(ws, requestData) {
@@ -90,7 +90,10 @@ function missionSend(requestData) {
     code: 0
   }
   sendWebSocketMessage(ws, data);
-  emit(EVENT_TYPES.MISSION_SEND, requestData);
+  emit(EVENT_TYPES.CRON_STOP);
+  setTimeout(() => {
+    emit(EVENT_TYPES.MISSION_SEND, requestData);
+  }, 100);
 }
 
 function missionStop() {
