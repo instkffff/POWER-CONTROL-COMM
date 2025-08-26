@@ -120,7 +120,6 @@ async function processNextMission() {
             const progress = Math.round(((i + 1) / totalDevices) * 100);
 
             try {
-                // 模拟处理设备命令
                 await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, true, 801310);
                 console.log(`处理设备 ${deviceId} 成功, 进度: ${progress}%`);
                 successCount++;
