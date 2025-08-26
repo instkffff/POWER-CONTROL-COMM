@@ -122,17 +122,9 @@ async function executeCronTask() {
         return;
     }
 
-    try {
-        if (!serialPortOpened) {
-            // 确保在重新打开串口前关闭可能存在的旧连接
-            if (serialPortOpened) {
-                try {
-                    closeSerialPort();
-                } catch (err) {
-                    console.warn('关闭旧串口连接时出错:', err);
-                }
-            }
-            
+    // 只有在串口未打开时才尝试打开
+    if (!serialPortOpened) {
+        try {
             await openSerialPort(COM_PORT, serialConfig);
             serialPortOpened = true;
             console.log('串口已打开，开始执行任务。');
@@ -142,12 +134,12 @@ async function executeCronTask() {
                 listenerSetup = true;
                 console.log('数据包监听器已设置。');
             }
+        } catch (error) {
+            console.error('打开串口失败，串口可能被其他程序占用:', error.message);
+            serialPortOpened = false;
+            listenerSetup = false;
+            return;
         }
-    } catch (error) {
-        console.error('打开串口失败:', error.message);
-        serialPortOpened = false;
-        listenerSetup = false; // 串口打开失败时重置监听器标志
-        return;
     }
     
     // 检查是否已完成所有ID
@@ -164,12 +156,10 @@ async function executeCronTask() {
 
         const deviceId = IDList[i];
         try {
-
             const kwhPacket = makePacket(801310, ReadKWHFunctionCode, 'GP', {});
             const kwhResponse = await sendPacketAndWaitForResponse(kwhPacket);
             const parsedKwhData = parsePacket(kwhResponse, 'PRP');
             await updateDatabaseAfterReceive(deviceId, parsedKwhData);
-
 
             const statusPacket = makePacket(801310, ReadStatusFunctionCode, 'GP', {});
             const statusResponse = await sendPacketAndWaitForResponse(statusPacket);
@@ -190,6 +180,8 @@ async function executeCronTask() {
         currentIDIndex = 0;
         taskCompleted = true;
         console.log('所有设备处理完成，将在60分钟后重新开始');
+        closeSerialPort();
+        serialPortOpened = false; // 关闭串口后重置标志
     }
 }
 
