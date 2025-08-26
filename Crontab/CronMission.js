@@ -18,7 +18,6 @@ const serialConfig = {
 
 let cronRunning = true;
 let serialPortOpened = false;
-let packetPromiseResolver = null;
 let mainLoopInterval = null;
 let portCheckInterval = null;
 let listenerSetup = false;
@@ -33,12 +32,6 @@ on(EVENT_TYPES.CRON_STOP, () => {
     if (mainLoopInterval) {
         clearInterval(mainLoopInterval);
         mainLoopInterval = null;
-    }
-    
-    // 如果有正在等待的Promise，立即拒绝它以中断await
-    if (packetPromiseResolver) {
-        packetPromiseResolver(new Error('任务已中断'));
-        packetPromiseResolver = null;
     }
 
     if (serialPortOpened) {
@@ -95,18 +88,21 @@ function sendPacketAndWaitForResponse(packet) {
             return reject(new Error('任务已中断，无法发送数据。'));
         }
         
-        const timeout = setTimeout(() => {
-            packetPromiseResolver = null;
-            reject(new Error('等待响应超时'));
-        }, 1000); // 增加超时时间到1000ms
-
-        packetPromiseResolver = (data) => {
-            clearTimeout(timeout);
-            packetPromiseResolver = null;
-            resolve(data);
-        };
-
+        // 发送数据
         sendPacket(packet);
+        
+        // 设置超时计时器
+        const timeout = setTimeout(() => {
+            unsubscribe();
+            reject(new Error('等待响应超时'));
+        }, 1000);
+
+        // 监听响应数据
+        const unsubscribe = onPacketReceived((data) => {
+            clearTimeout(timeout);
+            unsubscribe();
+            resolve(data);
+        });
     });
 }
 
@@ -116,9 +112,8 @@ function sendPacketAndWaitForResponse(packet) {
 async function executeCronTask() {
     if (!cronRunning) return;
     
-    // 如果一轮任务已完成，等待60分钟再重新开始
     if (taskCompleted) {
-        console.log('一轮任务已完成，等待60分钟后重新开始...');
+        console.log('周期一轮任务已完成');
         return;
     }
 
@@ -179,7 +174,7 @@ async function executeCronTask() {
     if (currentIDIndex >= IDList.length) {
         currentIDIndex = 0;
         taskCompleted = true;
-        console.log('所有设备处理完成，将在60分钟后重新开始');
+        console.log('周期任务完成');
         closeSerialPort();
         serialPortOpened = false; // 关闭串口后重置标志
     }
@@ -189,15 +184,7 @@ async function executeCronTask() {
  * 监听串口数据
  */
 function setupPacketListener() {
-    onPacketReceived((data) => {
-        try {
-            if (packetPromiseResolver) {
-                packetPromiseResolver(data);
-            }
-        } catch (error) {
-            console.error('处理接收到的数据时出错:', error);
-        }
-    });
+    // 不再需要在这里做任何事情，因为sendPacketAndWaitForResponse现在自己处理监听
 }
 
 /**
@@ -215,7 +202,7 @@ async function startMainLoop() {
             taskCompleted = false;
             await executeCronTask();
         }
-    }, 60 * 60 * 1000); // 每60分钟执行一次
+    }, 5 * 60 * 1000); // 每60分钟执行一次
     
     // 立即执行一次任务
     if (cronRunning) {
@@ -237,13 +224,6 @@ async function checkAndResumeTask() {
     // taskCompleted 不重置，保持完成状态
 
     try {
-        // 确保串口完全关闭后再打开
-        try {
-            closeSerialPort();
-        } catch (err) {
-            // 忽略关闭错误
-        }
-        
         await openSerialPort(COM_PORT, serialConfig);
         serialPortOpened = true;
         console.log('串口已重新打开，恢复任务。');
@@ -280,5 +260,3 @@ async function Cron() {
 }
 
 export { Cron }
-
-// 此处代码质量极差 全部由AI生成 多次AI修改 等以后再重写
