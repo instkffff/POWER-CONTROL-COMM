@@ -150,12 +150,12 @@ async function executeCronTask() {
 
         const deviceId = IDList[i];
         try {
-            const kwhPacket = makePacket(801310, ReadKWHFunctionCode, 'GP', {});
+            const kwhPacket = makePacket(deviceId, ReadKWHFunctionCode, 'GP', {});
             const kwhResponse = await sendPacketAndWaitForResponse(kwhPacket);
             const parsedKwhData = parsePacket(kwhResponse, 'PRP');
             await updateDatabaseAfterReceive(deviceId, parsedKwhData);
 
-            const statusPacket = makePacket(801310, ReadStatusFunctionCode, 'GP', {});
+            const statusPacket = makePacket(deviceId, ReadStatusFunctionCode, 'GP', {});
             const statusResponse = await sendPacketAndWaitForResponse(statusPacket);
             const parsedStatusData = parsePacket(statusResponse, 'PRP');
             await updateDatabaseAfterReceive(deviceId, parsedStatusData);
@@ -195,7 +195,7 @@ async function startMainLoop() {
             taskCompleted = false;
             await executeCronTask();
         }
-    }, 5 * 60 * 1000); // 每60分钟执行一次
+    }, 60 * 60 * 1000); // 每60分钟执行一次
     
     // 立即执行一次任务
     if (cronRunning) {
