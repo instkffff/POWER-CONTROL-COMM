@@ -125,7 +125,6 @@ async function executeCronTask() {
             console.log('串口已打开，开始执行任务。');
             
             if (!listenerSetup) {
-                setupPacketListener();
                 listenerSetup = true;
                 console.log('数据包监听器已设置。');
             }
@@ -180,12 +179,6 @@ async function executeCronTask() {
     }
 }
 
-/**
- * 监听串口数据
- */
-function setupPacketListener() {
-    // 不再需要在这里做任何事情，因为sendPacketAndWaitForResponse现在自己处理监听
-}
 
 /**
  * 启动主循环定时器
@@ -229,7 +222,6 @@ async function checkAndResumeTask() {
         console.log('串口已重新打开，恢复任务。');
         
         if (!listenerSetup) {
-            setupPacketListener();
             listenerSetup = true;
             console.log('数据包监听器已设置。');
         }
