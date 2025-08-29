@@ -95,7 +95,7 @@ function sendPacketAndWaitForResponse(packet) {
         const timeout = setTimeout(() => {
             unsubscribe();
             reject(new Error('等待响应超时'));
-        }, 1000);
+        }, 500);
 
         // 监听响应数据
         const unsubscribe = onPacketReceived((data) => {
