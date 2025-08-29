@@ -57,6 +57,89 @@ missionSuccess
 let responseTimeout = 500; // 1秒超时
 
 /**
+ * 发送数据并等待响应的内部函数
+ * @param {Buffer} buffer - 要发送的数据
+ * @param {string} deviceId - 设备ID
+ * @param {string} requestID - 请求ID
+ * @param {number} progress - 进度值
+ * @returns {Promise<Buffer>} 接收到的响应数据
+ */
+const sendAndReceive = async (buffer, deviceId, requestID, progress) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // 发送数据
+      await sendPacket(buffer);
+      
+      // 设置超时计时器
+      const timeout = setTimeout(() => {
+        reject(new Error('Response timeout'));
+      }, responseTimeout);
+
+      // 监听响应数据
+      const unsubscribe = onPacketReceived((data) => {
+        clearTimeout(timeout);
+        unsubscribe();
+        
+        // 触发成功事件
+        emit(EVENT_TYPES.RS485_SUCCESS, {
+          type: 'command',
+          RequestID: requestID,
+          deviceId: deviceId,
+          status: 'success',
+          progress: progress,
+          code: 1
+        });
+        
+        resolve(data);
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+/**
+ * 重试发送命令的内部函数
+ * @param {Buffer} buffer - 要发送的数据
+ * @param {string} deviceId - 设备ID
+ * @param {string} requestID - 请求ID
+ * @param {number} progress - 进度值
+ * @param {number} retryTimes - 重试次数
+ * @returns {Promise<Buffer>} 接收到的响应数据
+ */
+const sendCommandWithRetry = async (buffer, deviceId, requestID, progress, retryTimes) => {
+  let retries = 0;
+  
+  const attemptSend = async () => {
+    try {
+      const result = await sendAndReceive(buffer, deviceId, requestID, progress);
+      return result;
+    } catch (error) {
+      if (retries < retryTimes) {
+        retries++;
+        console.log(`Retry ${retries}/${retryTimes} for device ${deviceId}`);
+        // 等待一段时间后重试
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return await attemptSend();
+      } else {
+        // 触发失败事件
+        emit(EVENT_TYPES.RS485_FAILED, {
+          type: 'command',
+          RequestID: requestID,
+          deviceId: deviceId,
+          status: 'failed',
+          progress: progress,
+          code: 1
+        });
+        throw error;
+      }
+    }
+  };
+  
+  return await attemptSend();
+};
+
+/**
  * 发送命令并等待响应
  * @param {Buffer} buffer - 要发送的数据
  * @param {string} deviceId - 设备ID
@@ -64,69 +147,7 @@ let responseTimeout = 500; // 1秒超时
  * @returns {Promise<Buffer>} 接收到的响应数据
  */
 const sendCommand = async (requestID, progress, buffer, deviceId, retryTimes) => {
-  let retries = 0;
-  const sendAndReceive = () => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // 发送数据
-        await sendPacket(buffer);
-        
-        // 设置超时计时器
-        const timeout = setTimeout(() => {
-          handleFailure(new Error('Response timeout'));
-        }, responseTimeout);
-
-        // 监听响应数据
-        const unsubscribe = onPacketReceived((data) => {
-          clearTimeout(timeout);
-          unsubscribe();
-          
-          // 触发成功事件
-          emit(EVENT_TYPES.RS485_SUCCESS, {
-            type: 'command',
-            RequestID: requestID,
-            deviceId: deviceId,
-            status: 'success',
-            progress: progress,
-            code: 1
-          });
-          
-          resolve(data);
-        });
-
-        // 错误处理函数
-        const handleFailure = (error) => {
-          clearTimeout(timeout);
-          unsubscribe();
-          
-          if (retries < retryTimes) {
-            retries++;
-            console.log(`Retry ${retries}/${retryTimes} for device ${deviceId}`);
-            setTimeout(() => {
-              sendAndReceive().then(resolve).catch(reject);
-            }, 500); // 1秒后重试
-          } else {
-            // 触发失败事件
-            emit(EVENT_TYPES.RS485_FAILED, {
-              type: 'command',
-              RequestID: requestID,
-              deviceId: deviceId,
-              status: 'failed',
-              progress: progress,
-              code: 1
-            });
-            
-            reject(error);
-          }
-        };
-
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-
-  return await sendAndReceive();
+  return await sendCommandWithRetry(buffer, deviceId, requestID, progress, retryTimes);
 };
 
 /**
