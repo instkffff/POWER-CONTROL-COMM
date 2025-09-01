@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 const initSql = readFileSync(join(__dirname, 'db.sql'), 'utf8');
 
 // 读取设备配置
-const deviceConfig = JSON.parse(readFileSync(join(__dirname, 'deviceConfigExample.json'), 'utf8'));
+const deviceConfig = JSON.parse(readFileSync(join(__dirname, 'deviceConfig.json'), 'utf8'));
 
 // 初始化数据库并插入数据
 function initializeDatabaseWithData() {
