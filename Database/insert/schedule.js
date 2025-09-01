@@ -61,7 +61,24 @@ function updateScheduleData(data) {
       periodArray[periodId] = data.period;
       modeArray[periodId] = data.mode;
       powerArray[periodId] = data.power;
-      weekScheduleArray[periodId] = data.weekSchedule;
+      
+      // 处理 weekSchedule 数据格式转换：将对象数组转换为多维数字数组
+      if (data.weekSchedule && Array.isArray(data.weekSchedule) && 
+          data.weekSchedule.length > 0 && 
+          typeof data.weekSchedule[0] === 'object' && 
+          data.weekSchedule[0] !== null) {
+        // 将对象数组 [{haltHour:0, haltMinute:0, openHour:7, openMinute:30}, ...]
+        // 转换为多维数组 [[0, 0, 7, 30], ...]
+        weekScheduleArray[periodId] = data.weekSchedule.map(day => [
+          day.haltHour,
+          day.haltMinute,
+          day.openHour,
+          day.openMinute
+        ]);
+      } else {
+        // 如果已经是数组格式或其他格式，直接使用
+        weekScheduleArray[periodId] = data.weekSchedule;
+      }
       
       // 准备更新语句
       const updateStmt = db.prepare(`
