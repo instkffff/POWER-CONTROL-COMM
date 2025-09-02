@@ -150,7 +150,8 @@ async function handleLogin(req, res) {
       res.end(JSON.stringify({
         code: 0,
         name: user.name,
-        token: token
+        token: token,
+        phone: user.phone
       }));
     } else {
       // 返回失败响应
@@ -170,6 +171,18 @@ async function handleLogin(req, res) {
 // 创建 HTTP 服务器
 function createHttpServer() {
   return http.createServer((req, res) => {
+    // 添加 CORS 支持
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // 处理预检请求
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+    
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
 
