@@ -87,24 +87,39 @@ function sendPacketAndWaitForResponse(packet) {
         if (!cronRunning) {
             return reject(new Error('任务已中断，无法发送数据。'));
         }
+
+        if (!serialPortOpened) {
+            return reject(new Error('串口未打开，无法发送数据。'));
+        }
         
-        sendPacket(packet);
+        // 添加额外的串口状态检查
+        sendPacket(packet)
+            .then(() => {
+                // 监听响应数据
+                const unsubscribe = onPacketReceived((data) => {
+                    clearTimeout(timeout);
+                    unsubscribe();
+                    resolve(data);
+                });
 
-        // 监听响应数据
-        const unsubscribe = onPacketReceived((data) => {
-            clearTimeout(timeout);
-            unsubscribe();
-            resolve(data);
-        });
-
-        // 设置超时计时器
-        const timeout = setTimeout(() => {
-            unsubscribe();
-            reject(new Error('等待响应超时'));
-        }, 500);
-
+                // 设置超时计时器
+                const timeout = setTimeout(() => {
+                    try {
+                        unsubscribe();
+                    } catch (error) {
+                        console.error('关闭串口失败:', error.message);
+                    }
+                    reject(new Error('等待响应超时'));
+                }, 500);
+            })
+            .catch((error) => {
+                // 更新串口状态标志
+                serialPortOpened = false;
+                console.error('发送数据包失败:', error);
+                reject(new Error(`发送数据包失败: ${error.message}`));
+            });
     });
-}
+};
 
 /**
  * 执行定时任务，遍历IDList
@@ -166,6 +181,16 @@ async function executeCronTask() {
             console.error(`处理设备 ${deviceId} 时出错:`, error);
             // 失败时也更新索引，确保下一次从下一个ID开始
             currentIDIndex = i + 1; 
+            
+            // 如果是串口断开错误，中断整个任务循环
+            if (error.message.includes('串口未打开')) {
+                console.log('由于串口断开，中断任务循环');
+                // 重置状态以便在下次检查时重新开始
+                serialPortOpened = false;
+                listenerSetup = false;
+                cronRunning = false;
+                break;
+            }
         }
     }
     
