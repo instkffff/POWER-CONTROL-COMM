@@ -88,14 +88,7 @@ function sendPacketAndWaitForResponse(packet) {
             return reject(new Error('任务已中断，无法发送数据。'));
         }
         
-        // 发送数据
         sendPacket(packet);
-        
-        // 设置超时计时器
-        const timeout = setTimeout(() => {
-            unsubscribe();
-            reject(new Error('等待响应超时'));
-        }, 500);
 
         // 监听响应数据
         const unsubscribe = onPacketReceived((data) => {
@@ -103,6 +96,13 @@ function sendPacketAndWaitForResponse(packet) {
             unsubscribe();
             resolve(data);
         });
+
+        // 设置超时计时器
+        const timeout = setTimeout(() => {
+            unsubscribe();
+            reject(new Error('等待响应超时'));
+        }, 500);
+
     });
 }
 

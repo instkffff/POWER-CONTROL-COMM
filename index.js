@@ -38,4 +38,4 @@ process.on('unhandledRejection', (reason, promise) => {
 startSerialService();
 
 // 启动定时任务
-// Cron();    
+Cron();
