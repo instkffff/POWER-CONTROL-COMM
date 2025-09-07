@@ -42,8 +42,6 @@ on(EVENT_TYPES.CRON_STOP, () => {
     
     // 重置监听器设置标志，确保重启时能重新设置监听器
     listenerSetup = false;
-    currentIDIndex = 0; // 重置索引
-    taskCompleted = false; // 重置完成标记
 });
 
 /**
