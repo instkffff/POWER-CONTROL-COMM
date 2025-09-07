@@ -1,4 +1,4 @@
-import { openSerialPort, closeSerialPort, sendPacket, onPacketReceived } from '../Serial/SerialPort.js'
+import { openSerialPort, closeSerialPort, sendPacket, onPacketReceived, isSerialPortConnected } from '../Serial/SerialPort.js'
 import { EVENT_TYPES, on } from '../Websocket/eventList.js';
 import { getAllIds } from './IDlist.js';
 import { update } from '../Database/main.js';
@@ -272,7 +272,11 @@ async function Cron() {
     }
     
     portCheckInterval = setInterval(async () => {
-        await checkAndResumeTask();
+        let status = isSerialPortConnected();
+
+        if (!status) {
+            await checkAndResumeTask();
+        }
     }, 60 * 1000);
 }
 

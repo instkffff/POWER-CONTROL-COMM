@@ -186,10 +186,19 @@ const onPacketReceived = (onData) => {
   };
 };
 
+/**
+ * 获取当前串口连接状态
+ * @returns {boolean} 串口连接状态，true表示已连接，false表示未连接
+ */
+const isSerialPortConnected = () => {
+  return isConnected;
+};
+
 export {
   openSerialPort,
   closeSerialPort,
   sendPacket,
   onPacketReceived,
-  autoReconnect
+  autoReconnect,
+  isSerialPortConnected
 };
