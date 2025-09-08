@@ -14,6 +14,25 @@ const initSql = readFileSync(join(__dirname, 'db.sql'), 'utf8');
 // 读取设备配置
 const deviceConfig = JSON.parse(readFileSync(join(__dirname, 'deviceConfig.json'), 'utf8'));
 
+// 生成默认周计划数据
+function generateDefaultWeekSchedule() {
+  // 创建一个5周期×7天×4时段的三维数组，全部初始化为0
+  const schedule = Array(5).fill(null).map(() => 
+    Array(7).fill(null).map(() => 
+      Array(4).fill(0)
+    )
+  );
+  return JSON.stringify(schedule);
+}
+
+// 定义默认值常量
+const DEFAULT_VALUES = {
+  period: '[1,2,3,4,5]',
+  mode: '[0,0,0,0,0]',
+  power: '[0,0,0,0,0]',
+  weekSchedule: generateDefaultWeekSchedule()
+};
+
 // 初始化数据库并插入数据
 function initializeDatabaseWithData() {
   try {
@@ -50,9 +69,9 @@ function initializeDatabaseWithData() {
     `);
 
     const insertScheduleStmt = db.prepare(`
-  INSERT INTO "schedule" (deviceID, period, mode, power, weekSchedule) 
-  VALUES (?, ?, ?, ?, ?)
-`);
+      INSERT INTO "schedule" (deviceID, period, mode, power, weekSchedule) 
+      VALUES (?, ?, ?, ?, ?)
+    `);
 
     const insertReadKWHRStmt = db.prepare(`
       INSERT INTO "ReadKWHR" (deviceID) 
@@ -69,8 +88,16 @@ function initializeDatabaseWithData() {
         insertStatusStmt.run(device.deviceID);
         insertBasicSettingStmt.run(device.deviceID);
         insertWindowSettingStmt.run(device.deviceID);
-        // 为 weekSchedule 提供默认值
-        insertScheduleStmt.run(device.deviceID, '[1,2,3,4,5]', '[0,0,0,0,0]', '[0,0,0,0,0]', '[[],[],[],[],[]]');
+        
+        // 插入计划表（使用简化后的默认值）
+        insertScheduleStmt.run(
+          device.deviceID,
+          DEFAULT_VALUES.period,
+          DEFAULT_VALUES.mode,
+          DEFAULT_VALUES.power,
+          DEFAULT_VALUES.weekSchedule
+        );
+        
         insertReadKWHRStmt.run(device.deviceID);
       }
     });
