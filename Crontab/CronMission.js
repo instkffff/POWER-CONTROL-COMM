@@ -3,11 +3,12 @@ import { EVENT_TYPES, on } from '../Websocket/eventList.js';
 import { getAllIds } from './IDlist.js';
 import { update } from '../Database/main.js';
 import { makePacket, parsePacket } from '../packetMaker/main.js';
+import { COM, TestMode, testDeviceId } from '../config.js';
 
 const ReadKWHFunctionCode = 2
 const ReadStatusFunctionCode = 7
 const IDList = getAllIds();
-const COM_PORT = 'COM5';
+const COM_PORT = COM;
 
 const serialConfig = {
     baudRate: 9600,
@@ -163,12 +164,19 @@ async function executeCronTask() {
 
         const deviceId = IDList[i];
         try {
-            const kwhPacket = makePacket(deviceId, ReadKWHFunctionCode, 'GP', {});
+
+            let _deviceId = deviceId;
+
+            if (TestMode) {
+                _deviceId = testDeviceId;
+            }
+
+            const kwhPacket = makePacket(_deviceId, ReadKWHFunctionCode, 'GP', {});
             const kwhResponse = await sendPacketAndWaitForResponse(kwhPacket);
             const parsedKwhData = parsePacket(kwhResponse, 'PRP');
             await updateDatabaseAfterReceive(deviceId, parsedKwhData);
 
-            const statusPacket = makePacket(deviceId, ReadStatusFunctionCode, 'GP', {});
+            const statusPacket = makePacket(_deviceId, ReadStatusFunctionCode, 'GP', {});
             const statusResponse = await sendPacketAndWaitForResponse(statusPacket);
             const parsedStatusData = parsePacket(statusResponse, 'PRP');
             await updateDatabaseAfterReceive(deviceId, parsedStatusData);

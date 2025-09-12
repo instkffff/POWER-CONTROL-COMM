@@ -5,6 +5,7 @@
 This is a Node.js-based communication system designed for power control management. The system facilitates communication with power devices through serial ports (RS485) and provides both HTTP and WebSocket interfaces for client interaction.
 
 The system allows clients to:
+
 - Authenticate via HTTP login endpoint
 - Connect via WebSocket for real-time communication
 - Send commands to control power devices
@@ -24,20 +25,26 @@ The system consists of several interconnected components:
 ## Key Components
 
 ### Main Entry Point
+
 `index.js` - The main application file that initializes all services:
+
 - HTTP server on port 3000
 - WebSocket server on port 3001
 - Serial service initialization
 - Cron scheduler startup
 
 ### HTTP Server
+
 Located in `Http/main.js`:
+
 - Provides `/api/login` endpoint for user authentication
 - Uses `userList.json` for user credentials and `token.json` for session management
 - Implements token-based authentication with expiration (24 hours)
 
 ### WebSocket Server
+
 Located in `Websocket/main.js`:
+
 - Provides WebSocket communication on port 3001
 - Validates connections using token authentication
 - Routes messages based on type:
@@ -45,36 +52,46 @@ Located in `Websocket/main.js`:
   - Command requests handled by `missionList.js`
 
 ### Serial Communication
+
 Located in `Serial/main.js`:
+
 - Manages communication with power devices via RS485 serial port (COM5)
 - Implements task queuing system for handling device commands
 - Supports cancellation of ongoing operations
 - Uses `SerialPort.js` for low-level serial communication
 
 ### Cron Scheduler
+
 Located in `Crontab/CronMission.js`:
+
 - Periodically polls all registered devices for status information
 - Reads power consumption (KWH) and device status
 - Updates database with collected information every hour
 - Handles serial port connection management and error recovery
 
 ### Packet Handling
+
 Located in `packetMaker/main.js`:
+
 - Creates and parses protocol packets for device communication
 - Uses function codes for different types of requests:
   - Function code 2: Read KWH data
   - Function code 7: Read device status
+- Uses `FCmap` function mapping for different packet types
 
 ### Database
+
 Located in `Database/main.js`:
+
 - Manages SQLite database operations
 - Updates device status and power consumption readings
 - Provides methods for updating various device properties
+- Contains separate modules for query and update operations
 
 ## Configuration Files
 
-- `deviceConfig.json`: Device configuration settings
-- `missionList.json`: List of available missions/commands
+- `deviceConfig.json`: Device configuration settings that map logical IDs to physical device IDs
+- `missionList.json`: List of available missions/commands (currently empty)
 - `userList.json`: User authentication data
 - `token.json`: Active user sessions and tokens
 - `package.json`: Project dependencies and metadata
@@ -88,23 +105,29 @@ Located in `Database/main.js`:
 ## Building and Running
 
 ### Prerequisites
+
 - Node.js (version supporting ES modules)
 - RS485 serial port adapter connected to COM5
 - Power devices compatible with the protocol
 
 ### Setup
+
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 ### Running
+
 Start the application:
+
 ```bash
 node index.js
 ```
 
 The system will start:
+
 - HTTP server on port 3000
 - WebSocket server on port 3001
 - Serial communication service on COM5
@@ -121,7 +144,18 @@ The system will start:
 ## Testing
 
 Currently, no formal tests are implemented. Tests could be added for:
+
 - Authentication flows
 - WebSocket message handling
 - Serial communication protocols
 - Database update operations
+
+## System Flow
+
+1. Users authenticate via HTTP login endpoint to get a token
+2. Clients connect to WebSocket using the token for real-time communication
+3. Commands are sent through WebSocket to control devices
+4. The system manages a serial communication queue to handle device commands
+5. A cron job periodically polls all devices for status and power consumption
+6. All data is stored in an SQLite database
+7. Packet handling converts between protocol formats and data structures

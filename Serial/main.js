@@ -1,6 +1,7 @@
 import { openSerialPort, closeSerialPort } from './SerialPort.js';
 import { on, emit, EVENT_TYPES } from '../Websocket/eventList.js';
 import { handleDeviceCommand } from './commandHandle.js';
+import { COM, TestMode, testDeviceId } from '../config.js';
 
 // 全局状态管理
 const state = {
@@ -106,7 +107,7 @@ async function processNextMission() {
 
     try {
         // 打开串口
-        await openSerialPort('COM5', serialConfig);
+        await openSerialPort(COM, serialConfig);
 
         // 遍历并处理每个设备
         for (let i = 0; i < totalDevices; i++) {
@@ -120,7 +121,7 @@ async function processNextMission() {
             const progress = Math.round(((i + 1) / totalDevices) * 100);
 
             try {
-                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, true, 801310);
+                await handleDeviceCommand(requestID, progress, deviceId, currentMission.data, TestMode, testDeviceId);
                 console.log(`处理设备 ${deviceId} 成功, 进度: ${progress}%`);
                 successCount++;
             } catch (error) {
