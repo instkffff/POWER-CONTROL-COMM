@@ -22,9 +22,6 @@ async function handleDeviceCommand(requestID, progress, deviceId, missionData, t
 
   console.log(`正在处理设备 ${deviceId} 的命令，功能码: ${FunctionCode}`);
 
-  // 根据功能码在发送前更新数据库
-  await updateDatabaseBeforeSend(deviceId, FunctionCode, data);
-
   // 使用 switch 语句处理不同的功能码
   switch (FunctionCode) {
     case 15: // 时间同步
@@ -42,6 +39,9 @@ async function handleDeviceCommand(requestID, progress, deviceId, missionData, t
       await COMMlog(packetBuffer);
       // 根据command.js更新sendCommand调用方式
       const responseBuffer = await sendCommand(requestID, progress, packetBuffer, deviceId, retryTimes);
+
+      await updateDatabaseBeforeSend(deviceId, FunctionCode, data);
+
       await COMMlog(responseBuffer);
       const parsedResponse = parsePacket(responseBuffer, 'PRP');
       // 根据响应的功能码更新数据库
