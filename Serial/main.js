@@ -20,6 +20,7 @@ const serialConfig = {
     dataBits: 8,
     stopBits: 1,
     parity: 'none',
+    bufferSize: 65536
 };
 
 // 添加事件监听器

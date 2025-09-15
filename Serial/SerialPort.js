@@ -172,8 +172,24 @@ const onPacketReceived = (onData) => {
     throw new Error('Serial port is not open');
   }
 
+  let buffer = Buffer.alloc(0); // 创建缓冲区存储数据
+
   const dataHandler = (data) => {
-    onData(data);
+    buffer = Buffer.concat([buffer, data]); // 将新数据添加到缓冲区
+    
+    // 如果是特定类型的数据包(data[11] === 130)且长度达到43字节
+    if (buffer.length >= 12 && buffer[11] === 130) {
+      if (buffer.length >= 43) {
+        // 接收满43字节后处理数据
+        onData(buffer.slice(0, 43));
+        buffer = buffer.slice(43); // 剩余数据保留在缓冲区
+      }
+      // 如果未满43字节，继续等待更多数据
+    } else {
+      // 其他类型的数据包直接处理
+      onData(buffer);
+      buffer = Buffer.alloc(0); // 清空缓冲区
+    }
   };
 
   serialPortInstance.on('data', dataHandler);
