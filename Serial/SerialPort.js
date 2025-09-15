@@ -182,7 +182,7 @@ const onPacketReceived = (onData) => {
       if (buffer.length >= 43) {
         // 接收满43字节后处理数据
         onData(buffer.slice(0, 43));
-        buffer = buffer.slice(43); // 剩余数据保留在缓冲区
+        buffer = Buffer.alloc(0); // 清空缓冲区
       }
       // 如果未满43字节，继续等待更多数据
     } else {
