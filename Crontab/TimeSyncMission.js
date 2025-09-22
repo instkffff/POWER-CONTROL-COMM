@@ -28,6 +28,8 @@ let taskCompleted = false; // 标记一轮任务是否已完成
 
 // 监听停止时间同步任务事件：立即中断任务并关闭串口
 on(EVENT_TYPES.CRON_STOP, () => {
+    if (taskCompleted) return;
+
     timeSyncRunning = false;
     console.log('时间同步任务已请求停止。');
 
@@ -165,14 +167,13 @@ async function startTimeSyncLoop() {
         clearInterval(timeSyncInterval);
     }
     
-    // 设置定时器，每12小时执行一次时间同步任务
     timeSyncInterval = setInterval(async () => {
         if (timeSyncRunning) {
             // 每次定时器触发时重置taskCompleted标志，允许新循环开始
             taskCompleted = false;
             await executeTimeSyncTask();
         }
-    }, 2 * 60 * 60 * 1000); // 每2小时执行一次
+    }, 2 * 60 * 60 * 1000);
     
     // 立即执行一次任务
     if (timeSyncRunning) {
@@ -189,8 +190,6 @@ async function checkAndResumeTimeSyncTask() {
 
     // 重置状态标志以确保正确恢复
     serialPortOpened = false;
-    currentIDIndex = 0; // 时间同步任务可以重新从头开始
-    taskCompleted = false;
 
     try {
         await openSerialPort(COM_PORT, serialConfig);
