@@ -27,6 +27,7 @@ let taskCompleted = false; // 标记一轮任务是否已完成
 
 // 监听停止定时任务事件：立即中断任务并关闭串口
 on(EVENT_TYPES.CRON_STOP, () => {
+    if (taskCompleted) return;
     cronRunning = false;
     console.log('Cron任务已请求停止。');
 
