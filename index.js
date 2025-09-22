@@ -2,6 +2,7 @@ import { createHttpServer } from './Http/main.js';
 import { wss } from './Websocket/main.js';
 import { startSerialService } from './Serial/main.js';
 import { Cron } from './Crontab/CronMission.js';
+import { TimeSync } from './Crontab/TimeSyncMission.js';
 
 // 创建并启动 HTTP 服务器
 const server = createHttpServer();
@@ -39,3 +40,4 @@ startSerialService();
 
 // 启动定时任务
 // Cron();
+TimeSync();
