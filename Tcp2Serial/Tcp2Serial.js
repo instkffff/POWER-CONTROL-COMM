@@ -49,7 +49,7 @@ export function createTcp2SerialBridge(options = {}) {
 
     // 处理TCP数据接收（直接转发）
     tcpClient.on('data', (data) => {
-        console.log('收到TCP数据:', data.toString('hex'));
+        // console.log('收到TCP数据:', data.toString('hex'));
         // 直接转发数据到串口
         serialPort.write(data, (err) => {
             if (err) {
@@ -65,7 +65,7 @@ export function createTcp2SerialBridge(options = {}) {
 
     // 处理串口数据接收（直接转发）
     serialPort.on('data', (data) => {
-        console.log('收到串口数据:', data.toString('hex'));
+        // console.log('收到串口数据:', data.toString('hex'));
         // 直接转发数据到TCP服务器
         tcpClient.write(data, (err) => {
             if (err) {
