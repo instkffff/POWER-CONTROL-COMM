@@ -4,6 +4,10 @@ import { startSerialService } from './Serial/main.js';
 import { Cron } from './Crontab/CronMission.js';
 import { TimeSync } from './Crontab/TimeSyncMission.js';
 
+import { createTcp2SerialBridge } from './Tcp2Serial/Tcp2Serial.js';
+
+import { COM, TestMode, testDeviceId, TCPRelay } from './config.js';
+
 // 创建并启动 HTTP 服务器
 const server = createHttpServer();
 server.listen(3000, () => {
@@ -41,3 +45,12 @@ startSerialService();
 // 启动定时任务
 // Cron();
 TimeSync();
+
+if ( TCPRelay ) {
+    createTcp2SerialBridge({
+        tcpHost: '127.0.0.1',
+        tcpPort: 2000,
+        serialPath: 'COM10',
+        serialBaudRate: 9600,
+    })
+}

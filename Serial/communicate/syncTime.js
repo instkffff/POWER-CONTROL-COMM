@@ -44,7 +44,7 @@ const syncTime = async (requestID, progress, buffer, deviceId, retryTimes) => {
         // 等待10ms后再resolve
         setTimeout(() => {
           resolve();
-        }, 10);
+        }, 20);
 
       } catch (error) {
         clearTimeout(timeout);
