@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { COM, TestMode, testDeviceId, TCPRelay, COMMlog } from '../config.js'
+import { COM, TestMode, testDeviceId, TCPRelay, COMMlogW } from '../config.js'
 
 // 获取当前文件的目录路径
 const __filename = fileURLToPath(import.meta.url);
@@ -28,7 +28,7 @@ async function COMMlog(buffer) {
         // 格式化日志内容
         const logContent = `[${timestamp}] ${hexString}\n`;
         
-        if( COMMlog ){
+        if( COMMlogW ){
             // 追加写入日志文件
             await fs.appendFile(logFilePath, logContent, 'utf8');
         } else {
