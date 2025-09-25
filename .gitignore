@@ -144,3 +144,5 @@ vite.config.ts.timestamp-*
 deviceConfig.json
 token.json
 userList.json
+
+power-control.db
