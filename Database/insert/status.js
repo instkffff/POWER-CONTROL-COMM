@@ -27,11 +27,14 @@ function updateStatusData(data) {
     // 创建数据库连接
     const dbPath = join(__dirname, '..', 'power-control.db');
     const db = new Database(dbPath);
+
+    // 计算有功功率（电压×电流）
+    const activePower = data.voltage * data.current;
     
     // 准备更新语句
     const updateStmt = db.prepare(`
       UPDATE "status" 
-      SET statusCode = ?, reasonCode = ?, voltage = ?, current = ?, power = ?
+      SET statusCode = ?, reasonCode = ?, voltage = ?, current = ?, activePower = ?, power = ?
       WHERE deviceID = ?
     `);
     
@@ -41,6 +44,7 @@ function updateStatusData(data) {
       data.reasonCode,
       data.voltage,
       data.current,
+      activePower,
       data.power,
       data.id
     );
