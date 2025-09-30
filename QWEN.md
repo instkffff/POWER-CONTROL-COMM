@@ -55,7 +55,7 @@ Located in `Websocket/main.js`:
 
 Located in `Serial/main.js`:
 
-- Manages communication with power devices via RS485 serial port (COM5)
+- Manages communication with power devices via RS485 serial port (COM7 by default)
 - Implements task queuing system for handling device commands
 - Supports cancellation of ongoing operations
 - Uses `SerialPort.js` for low-level serial communication
@@ -90,7 +90,7 @@ Located in `Database/main.js`:
 
 ## Configuration Files
 
-- `deviceConfig.json`: Device configuration settings that map logical IDs to physical device IDs
+- `config.js`: System configuration including COM port, test mode settings
 - `missionList.json`: List of available missions/commands (currently empty)
 - `userList.json`: User authentication data
 - `token.json`: Active user sessions and tokens
@@ -107,12 +107,12 @@ Located in `Database/main.js`:
 ### Prerequisites
 
 - Node.js (version supporting ES modules)
-- RS485 serial port adapter connected to COM5
+- RS485 serial port adapter connected to configured COM port
 - Power devices compatible with the protocol
 
 ### Setup
 
-1. Install dependencies:
+Install dependencies:
 
    ```bash
    npm install
@@ -130,7 +130,7 @@ The system will start:
 
 - HTTP server on port 3000
 - WebSocket server on port 3001
-- Serial communication service on COM5
+- Serial communication service on configured COM port
 - Cron scheduler that runs every hour
 
 ## Development Conventions
@@ -159,3 +159,81 @@ Currently, no formal tests are implemented. Tests could be added for:
 5. A cron job periodically polls all devices for status and power consumption
 6. All data is stored in an SQLite database
 7. Packet handling converts between protocol formats and data structures
+
+## API Documentation
+
+### Authentication
+
+- Endpoint: `/api/login`
+- Method: POST
+- Request Body:
+  ```json
+  {
+    "number": "15012345678",
+    "password": "123456"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "code": 0,
+    "name": "张三",
+    "token": "hk9cemnlgbut86vgqjtb9"
+  }
+  ```
+
+### WebSocket Connection
+
+- URL: `ws://localhost:3001?token=hk9cemnlgbut86vgqjtb9`
+- Connection Success Response:
+  ```json
+  {
+    "type": "connection",
+    "status": "success",
+    "message": "连接已建立。"
+  }
+  ```
+
+### WebSocket Commands
+
+#### Command Requests
+
+- Type: `command`
+- Request Format:
+  ```json
+  {
+    "type": "command",
+    "requestID": "12345",
+    "data": {
+      "IDList": [801001, 801002],
+      "FunctionCode": 11,
+      "data": {
+        "totalPower": 1000.0,
+        "reactivePower": 400.0,
+        "activePower": 990.0,
+        "inductorPower": 990.0,
+        "delay1": 60,
+        "delay2": 60,
+        "delay3": 60,
+        "retry": 4
+      }
+    }
+  }
+  ```
+
+#### Query Requests
+
+- Types: `status`, `basicSetting`, `readKWHR`, `schedule`, `windowSetting`
+- Request Format:
+  ```json
+  {
+    "type": "status",
+    "requestID": "12345",
+    "data": {
+      "deviceIDList": [801001, 801002],
+      "levelList": [1],
+      "groupList": [1],
+      "roomIDList": []
+    }
+  }
+  ```
